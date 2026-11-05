@@ -1,0 +1,43 @@
+{
+  "version": "application-reservation-v1",
+  "role": "application roles reserved before new holdout implementation or timing collection",
+  "applications": [
+    {
+      "id": "article-feed",
+      "role": "development",
+      "reason": "Used in new development experiments; never an application holdout"
+    },
+    {
+      "id": "issue-dashboard",
+      "role": "development",
+      "reason": "Used in query, write, off-host and browser development; never an application holdout"
+    },
+    {
+      "id": "inventory-reservation",
+      "role": "heldout",
+      "task": "Faceted availability and reservation/cancellation under stock changes",
+      "required_distinction": "Conditional transactional reservations and oversell prevention, multiattribute facets, pagination and stock availability; not a relabelled read-only catalog",
+      "oracle": "Integer stock ledger, idempotent operation identities, nonnegative remaining stock and snapshot-correct facet/list consistency",
+      "timing_state": "No performance observations collected for this reserved task"
+    },
+    {
+      "id": "time-window-analytics",
+      "role": "heldout",
+      "task": "Grouped/ranked reporting across fixed event-time windows with sales/refunds and late events",
+      "required_distinction": "Grouped time-window aggregation with integer monetary totals and changing rankings, not per-item comment-count retrieval",
+      "oracle": "Independent event-ledger recomputation in integer minor currency units, explicit interval boundaries, exact group/rank order and snapshot visibility",
+      "timing_state": "No performance observations collected for this reserved task"
+    }
+  ],
+  "allowed_before_release": [
+    "Implement application semantics and independent oracle",
+    "Run correctness-only checks without exporting comparative performance summaries"
+  ],
+  "release_requirements": [
+    "Freeze model, hyperparameters and fit-application identities",
+    "Freeze equal-budget serial profiling protocol and its recorded cost",
+    "Freeze main context and precision/stopping manifests",
+    "Validate exact registry and decision-contract digests before loaded evaluation"
+  ],
+  "profiling_boundary": "Holdout serial profiles may be consumed by the frozen decision function; neither those profiles nor held-out loaded outcomes may refit or manually select the function"
+}

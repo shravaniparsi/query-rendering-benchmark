@@ -1,0 +1,159 @@
+{
+  "version": "decision-components-v1",
+  "status": "executable development contract; main protocol not ready",
+  "primary_question": "Does joint configuration selection improve standardized joint-feasibility coverage over an informed query-only baseline on reserved application tasks?",
+  "primary_contrast": "day-aggregated joint minus query_only standardized feasibility score",
+  "primary_comparator": "query_only",
+  "secondary_comparators": [
+    "profile_fixed"
+  ],
+  "hindsight": "Per application/workload/threshold scenario best observed configuration, reference only; no fit/selection access",
+  "weights": "Equal application weights, equal physical workload contexts within application, equal threshold scenarios within context; aggregate all matched panels in a UTC collection-day block",
+  "threshold_family": {
+    "role": "development-chosen engineering sensitivity inputs; no claimed production or perceptual SLO",
+    "read_deadlines_ms": [
+      50,
+      100,
+      250
+    ],
+    "write_deadlines_ms": [
+      50,
+      100,
+      250
+    ],
+    "paint_deadlines_ms": [
+      250,
+      500,
+      1000
+    ],
+    "completion_fraction": 0.99,
+    "deadline_fraction": 0.95,
+    "scenario_names": [
+      "read-50_write-50_paint-250",
+      "read-50_write-50_paint-500",
+      "read-50_write-50_paint-1000",
+      "read-50_write-100_paint-250",
+      "read-50_write-100_paint-500",
+      "read-50_write-100_paint-1000",
+      "read-50_write-250_paint-250",
+      "read-50_write-250_paint-500",
+      "read-50_write-250_paint-1000",
+      "read-100_write-50_paint-250",
+      "read-100_write-50_paint-500",
+      "read-100_write-50_paint-1000",
+      "read-100_write-100_paint-250",
+      "read-100_write-100_paint-500",
+      "read-100_write-100_paint-1000",
+      "read-100_write-250_paint-250",
+      "read-100_write-250_paint-500",
+      "read-100_write-250_paint-1000",
+      "read-250_write-50_paint-250",
+      "read-250_write-50_paint-500",
+      "read-250_write-50_paint-1000",
+      "read-250_write-100_paint-250",
+      "read-250_write-100_paint-500",
+      "read-250_write-100_paint-1000",
+      "read-250_write-250_paint-250",
+      "read-250_write-250_paint-500",
+      "read-250_write-250_paint-1000"
+    ]
+  },
+  "semantics": {
+    "read_clock": "complete_s minus intended_s, including dispatch lag",
+    "logical_denominator": "All offered operations, separately read/write_a/write_b; all failures, drops and censored records miss deadlines",
+    "browser_clock": "Audited navigation-relative critical-content paint; only healthy, on-time/window-qualified probes count as completed",
+    "browser_endpoint": "Three Element Timing landmarks; local Watch click/DOM/reset correctness remains required, with no numeric local-click SLO",
+    "integrity": "Invalid semantic/clock/source/route/CPU evidence stops scoring; valid performance failures score against the selected configuration",
+    "ambiguous_writes": "Configuration is infeasible",
+    "population_reliability": "No per-request independent-Bernoulli certification is inferred from finite workload scores"
+  },
+  "policy": {
+    "issue_development_catalog": [
+      "correlated/ssr",
+      "correlated/csr",
+      "batched/ssr",
+      "batched/csr",
+      "maintained/ssr",
+      "maintained/csr"
+    ],
+    "final_holdout_catalogs": "Application-specific, frozen after semantic engineering; at least two equivalent query candidates and both paths for every candidate",
+    "query_only": "Query may vary with workload and threshold scenario; rendering fixed within application/scenario from permitted development/profile information",
+    "profile_fixed": "One query/rendering choice per application/threshold scenario from the same permitted profile budget; fixed across loaded workload contexts",
+    "joint": "Context/scenario-dependent choice using a function frozen on development data; no model has been fitted yet",
+    "abstention_predicted_probability_margin": 0.05,
+    "margin_role": "Engineering switching criterion; five percentage points of predicted finite-workload feasibility, not user-experience importance",
+    "feature_allowlist": [
+      "csr_request_count",
+      "csr_serial_paint_median_ms",
+      "db_logical_cpus",
+      "fixture_rows",
+      "offered_rate",
+      "pool_size",
+      "read_fraction",
+      "read_payload_bytes",
+      "read_service_cv",
+      "read_service_median_ms",
+      "result_rows",
+      "ssr_request_count",
+      "ssr_serial_paint_median_ms",
+      "target_logical_cpus",
+      "write_a_fraction",
+      "write_a_service_median_ms",
+      "write_b_fraction",
+      "write_b_service_median_ms"
+    ],
+    "features_are_not_yet_available": "Current loaded cohorts contain outcomes, not the frozen serial profile interface"
+  },
+  "application_registry": {
+    "path": "paper/followup/query-rendering-load/protocol/application_reservation_v1.json",
+    "sha256": "6fcf868257bf0b8bd3477be97f7c67358354f3dc95943d75669ec82a9663ee80"
+  },
+  "development_replay_inputs": {
+    "result_tag": "offhost-loaded-v1-results",
+    "measurement_source_commit": "86447796a7b70662b661128b1ebbaf83d1503380",
+    "derived_manifest_path": "data/issue-offhost/loaded-v1/analysis-manifest.json",
+    "derived_manifest_sha256": "5ee04fb74172e362c4f50d9fa1bee87d2e393d08a2d7732451db915cac108eb3",
+    "full_runs": [
+      "41268839116",
+      "41268840805",
+      "41268842514"
+    ],
+    "application": "issue-dashboard"
+  },
+  "precision": {
+    "independent_unit": "UTC collection-day aggregate of matched deployment panels",
+    "main_n_selected": false,
+    "planning_only": true,
+    "planning_candidates_days": [
+      12,
+      20,
+      30,
+      40,
+      60
+    ],
+    "planning_sd_scenarios": [
+      0.05,
+      0.1,
+      0.2,
+      0.3,
+      0.5
+    ],
+    "target_half_width_candidates": [
+      0.05,
+      0.1
+    ],
+    "stopping": "Choose fixed n from separate development/precision data and budget before held-out loaded outcomes; no favorable-result extension",
+    "missing": [
+      "Complete six-configuration development panels with loaded browser outcomes",
+      "Serial profile features and fitted/frozen selector",
+      "Primary paired day-score variance",
+      "Final workloads, browser sample counts, deployment schedule and cost budget"
+    ]
+  },
+  "accepted_revision": {
+    "filename": "SPE_revised_manuscript.docx",
+    "sha256": "32d120186eb08c1232c96765b31c45842fc20af09394f12d92bb692e774c9048",
+    "role": "Prior-work contribution comparison only; no observations imported into fitting, scoring or precision inputs"
+  },
+  "main_protocol_ready": false
+}

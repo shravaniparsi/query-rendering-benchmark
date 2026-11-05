@@ -1,0 +1,16 @@
+{
+  "version": "reserved-workload-trace-v1.1",
+  "role": "Prospective main background workload; no reserved comparative performance acquired",
+  "supersedes": "reserved-workload-trace-v1 for future main acquisition only",
+  "reason": "Inspection of the prospective windows showed that v1 placed every background refund beyond every read-window end. Refunds now affect the aggregate queries, while preserving valid sale/refund event-time ordering.",
+  "rates": [16, 64],
+  "duration_s": 20,
+  "nominal_write_fractions": [0.02, 0.5],
+  "scales": [1000, 100000],
+  "analytics_refunds": "Refund index i targets distinct seed-sale-i, amount 100, event time 100+i modulo 3600 plus 60 seconds for odd i and zero for even i. All follow their sale and the planned read windows observe refunds.",
+  "analytics_sales": "Alternating late event time 99 and in-window event time 100+i modulo 100, amount 100; all identities are distinct.",
+  "inventory": "Unchanged distinct reserve/cancel operations above product ID 20, with first 20 products reserved for the foreground browser task.",
+  "query_parameters": "Unchanged four-parameter-pattern cycle per application, including narrow/wide/late-event windows and faceted/empty product pages.",
+  "profile_trace": "Unchanged sixty operations per renderer: 36 reads, twelve write_a and twelve write_b operations, executed serially.",
+  "protection": "Earlier source-locked correctness/development versions and their results remain unchanged. This revision follows semantic window coverage, not observed comparative performance, and changes no deadline, model, mix, rate or primary comparator."
+}

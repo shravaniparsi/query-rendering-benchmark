@@ -1,0 +1,39 @@
+name: Preserve Public Validation Logs
+
+on:
+  workflow_run:
+    workflows: ['Public Benchmark Preflight']
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  preserve:
+    if: >-
+      github.event.repository.private == false &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      QRL_REPO: ${{ github.repository }}
+      QRL_RUN_ID: ${{ github.event.workflow_run.id }}
+      QRL_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+      QRL_SOURCE: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - name: Retain completed job metadata and complete masked Actions logs
+        run: |
+          QRL_STEM="public-validation-${QRL_RUN_ID}-${QRL_RUN_ATTEMPT}"
+          gh run view "$QRL_RUN_ID" --repo "$QRL_REPO" --json databaseId,headSha,status,conclusion,jobs,url,createdAt,updatedAt,event,workflowName > "/tmp/${QRL_STEM}-metadata.json"
+          gh run view "$QRL_RUN_ID" --repo "$QRL_REPO" --log > "/tmp/${QRL_STEM}-all-jobs.log"
+          QRL_TAG="validation-${QRL_RUN_ID}"
+          printf '%s\n' 'Retained validation metadata and masked complete job logs, including failed attempts.' > /tmp/qrl-log-notes.txt
+          if ! gh release view "$QRL_TAG" --repo "$QRL_REPO" >/dev/null 2>&1; then
+            gh release create "$QRL_TAG" --repo "$QRL_REPO" --target "$QRL_SOURCE" --title "Benchmark validation ${QRL_RUN_ID}" --notes-file /tmp/qrl-log-notes.txt
+          fi
+          gh release upload "$QRL_TAG" --repo "$QRL_REPO" "/tmp/${QRL_STEM}-metadata.json" "/tmp/${QRL_STEM}-all-jobs.log"

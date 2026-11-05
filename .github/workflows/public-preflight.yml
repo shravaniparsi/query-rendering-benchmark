@@ -1,0 +1,87 @@
+name: Public Benchmark Preflight
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-benchmark-preflight
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    permissions:
+      contents: write
+    services:
+      postgres:
+        image: postgres:18.0@sha256:41fc5342eefba6cc2ccda736aaf034bbbb7c3df0fdb81516eba1ba33f360162c
+        env:
+          POSTGRES_USER: qrl
+          POSTGRES_PASSWORD: qrl_disposable_ci
+          POSTGRES_DB: reserved_correctness
+        ports: ['127.0.0.1:5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U qrl -d reserved_correctness"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+    env:
+      PYTHONUNBUFFERED: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      QRL_TEST_DATABASE_URL: postgresql://qrl:qrl_disposable_ci@127.0.0.1:5432/reserved_correctness
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12.15'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.22.1'
+      - name: Install pinned application and browser dependencies without caches
+        run: |
+          python -m pip install --no-cache-dir -r apps/issue-dashboard/requirements.txt psycopg==3.2.10 psycopg-binary==3.2.10 typing_extensions==4.16.0 psutil==7.2.2
+          cd apps/issue-dashboard
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx --no-install playwright install --with-deps chromium
+      - name: Verify decision and pre-acquisition software contracts
+        run: |
+          python scripts/check_decision_contracts.py --output ci-artifacts/decision-contracts.json
+          python scripts/check_main_contracts.py --output ci-artifacts/main-contracts.json
+      - name: Replay the unchanged actual development model on Linux
+        run: python scripts/check_experimental_fit.py --data data/endtoend-distribution/v1-1 --fit data/decision-artifact/development-v1-1 --output ci-artifacts/actual-fit-replay.json
+      - name: Verify SQL and logical business delivery without comparative timing
+        run: |
+          python scripts/check_reserved_contracts.py --output ci-artifacts/reserved-contracts.json
+          python scripts/check_reserved_scale.py --rows 100000 --output ci-artifacts/largest-scale
+          python scripts/check_reserved_scale_browser.py --paint-contract --rows 1000 --output ci-artifacts/reserved-scale-1000
+          python scripts/check_reserved_scale_browser.py --paint-contract --rows 100000 --output ci-artifacts/reserved-scale-100000
+      - name: Preserve every available output as public release assets
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          QRL_REPO: ${{ github.repository }}
+          QRL_RUN_ID: ${{ github.run_id }}
+          QRL_RUN_ATTEMPT: ${{ github.run_attempt }}
+          QRL_SOURCE: ${{ github.sha }}
+        run: |
+          mkdir -p ci-artifacts
+          python - <<'PY'
+          import json, os, platform
+          from pathlib import Path
+          Path('ci-artifacts/run-identity.json').write_text(json.dumps({'run_id':os.environ['QRL_RUN_ID'],'run_attempt':os.environ['QRL_RUN_ATTEMPT'],'source_commit':os.environ['QRL_SOURCE'],'role':'correctness and fixed-model replay only','reserved_comparative_performance':False,'platform':platform.platform()},indent=2)+'\n')
+          PY
+          QRL_STEM="public-validation-${QRL_RUN_ID}-${QRL_RUN_ATTEMPT}"
+          python scripts/bundle_public_output.py --source ci-artifacts --bundle "/tmp/${QRL_STEM}.tar.gz" --manifest "/tmp/${QRL_STEM}.json"
+          QRL_TAG="validation-${QRL_RUN_ID}"
+          printf '%s\n' 'Synthetic correctness, software-contract and fixed development-model replay outputs. No reserved comparative performance.' > /tmp/qrl-release-notes.txt
+          if ! gh release view "$QRL_TAG" --repo "$QRL_REPO" >/dev/null 2>&1; then
+            gh release create "$QRL_TAG" --repo "$QRL_REPO" --target "$QRL_SOURCE" --title "Benchmark validation ${QRL_RUN_ID}" --notes-file /tmp/qrl-release-notes.txt
+          fi
+          gh release upload "$QRL_TAG" --repo "$QRL_REPO" "/tmp/${QRL_STEM}.tar.gz" "/tmp/${QRL_STEM}.json"

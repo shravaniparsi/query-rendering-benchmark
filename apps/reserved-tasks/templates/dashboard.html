@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ 'Inventory' if task == 'inventory' else 'Sales overview' }}</title><link rel="icon" href="data:,">
+<style>body{font:16px system-ui,sans-serif;margin:32px;max-width:1000px;color:#182333;background:#f7f9fc}main{background:white;padding:24px;border:1px solid #d9e0e9;border-radius:12px}h1{margin-top:0}article{border-top:1px solid #d9e0e9;padding:12px 0}h2{font-size:18px;margin:4px 0}p{margin:6px 0}button{padding:10px 16px;margin:8px 8px 12px 0;font:inherit}#error{color:#a02121}#facets{font-size:14px;color:#40516a}output{font-weight:600}</style></head>
+<body><main data-task="{{ task }}" data-strategy="{{ strategy }}" data-ready="false"
+data-qrl-outcome="{{ 'completed' if result and result.ok else 'failed' if result else 'loading' }}"
+data-response-operation="{{ result.read_operation if result and result.ok else '' }}" data-snapshot="{{ result.snapshot if result and result.ok else '' }}"
+data-operation-prefix="{{ operation_prefix }}">
+<h1>{{ 'Inventory' if task == 'inventory' else 'Sales overview' }}</h1>
+{% if task == 'analytics' %}<p id="window-label" data-start-s="{{ parameters.start_s }}" data-end-s="{{ parameters.end_s }}">Time window: {{ parameters.start_s }} inclusive to {{ parameters.end_s }} exclusive</p>{% endif %}
+<p id="error" role="alert">{{ 'Unable to load. Please try again.' if result and not result.ok else '' }}</p>
+<p id="task-count" elementtiming="task-count">{% if result and result.ok %}{{ 'Products: ' ~ result.itemsCount if task == 'inventory' else 'Groups: ' ~ result.groupsCount ~ ' · Events: ' ~ result.eventCount }}{% else %}Loading…{% endif %}</p>
+<div id="facets">{% if result and result.ok and task == 'inventory' %}{% for field,values in result.facets.items() %}<p data-facet="{{ field }}">{{ field|capitalize }}: {% for name,count in values.items() %}<span data-value="{{ name }}" data-count="{{ count }}">{{ name }} ({{ count }})</span> {% endfor %}</p>{% endfor %}{% endif %}</div>
+<div id="items">{% if result and result.ok %}{% if task == 'inventory' %}{% for row in result['items'] %}
+<article data-id="{{ row.id }}" data-category="{{ row.category }}" data-brand="{{ row.brand }}" data-price-minor="{{ row.price_minor }}" data-initial-stock="{{ row.initial_stock }}" data-remaining-stock="{{ row.remaining_stock }}"><h2 {% if loop.first %}elementtiming="task-first-title"{% endif %}>Product {{ row.id }}</h2><p>{{ row.category }} · {{ row.brand }}</p><p data-price>Price: {{ row.price_minor|money }}</p><p {% if loop.first %}elementtiming="task-first-value"{% endif %}><output data-value="{{ row.remaining_stock }}">Available: {{ row.remaining_stock }}</output></p></article>
+{% endfor %}{% else %}{% for row in result.groups %}
+<article data-region="{{ row.get('region','') }}" data-category="{{ row.get('category','') }}" data-gross-total-minor="{{ row.gross_total_minor }}" data-refund-total-minor="{{ row.refund_total_minor }}" data-sales-count="{{ row.sales_count }}" data-refund-count="{{ row.refund_count }}" data-net-total-minor="{{ row.net_total_minor }}"><h2 {% if loop.first %}elementtiming="task-first-title"{% endif %}>{{ row.get('region','') }}{{ ' / ' if row.get('region') and row.get('category') else '' }}{{ row.get('category','') }}</h2><p {% if loop.first %}elementtiming="task-first-value"{% endif %}><output data-value="{{ row.net_total_minor }}">Net sales: {{ row.net_total_minor|money }}</output></p><p>Sales: {{ row.sales_count }} · Refunds: {{ row.refund_count }}</p></article>
+{% endfor %}{% endif %}{% endif %}</div>
+<button id="primary-action" disabled>{{ 'Reserve one' if task == 'inventory' else 'Record a sale' }}</button><button id="secondary-action" disabled>{{ 'Cancel reservation' if task == 'inventory' else 'Refund sale' }}</button>
+<p id="action-status" role="status" aria-live="polite"></p>
+<script id="parameters" type="application/json">{{ parameters|tojson }}</script><script id="initial-data" type="application/json">{{ result|tojson }}</script>
+</main><script defer src="/static/client.js"></script></body></html>

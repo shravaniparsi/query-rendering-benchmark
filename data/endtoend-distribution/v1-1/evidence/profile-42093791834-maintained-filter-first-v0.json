@@ -1,0 +1,96 @@
+{
+  "application": "issue-dashboard",
+  "native_inputs": [
+    {
+      "archive": "data/issue-offhost/endtoend-v1-1-full-42093791834/observer.tar.gz",
+      "bytes": 15456,
+      "member": "issue-endtoend/serial-5/operations.json.gz",
+      "sha256": "2352c7c88639f531359441deac6f8f0466dbb33bd102d188f5cea85714f1124e"
+    },
+    {
+      "archive": "data/issue-offhost/endtoend-v1-1-full-42093791834/observer.tar.gz",
+      "bytes": 8358,
+      "member": "issue-endtoend/serial-5/schedule.json",
+      "sha256": "6c8430cb770b7b303ec121e4bf337b4689e1ebc7b3197d6e4bc2fca933488eb5"
+    },
+    {
+      "archive": "data/issue-offhost/endtoend-v1-1-full-42093791834/observer.tar.gz",
+      "bytes": 31561,
+      "member": "issue-endtoend/serial-5/quiet/loaded-browser.json",
+      "sha256": "08a89ada479b5484da3865dd39ee163764ec5e1dc543f66cac7fdfe269e96738"
+    },
+    {
+      "archive": "data/issue-offhost/endtoend-v1-1-full-42093791834/target.tar.gz",
+      "bytes": 29217,
+      "member": "issue-endtoend/serial-5/backend.jsonl",
+      "sha256": "1ce1f41485886f193a1a8aec57b3339242b49ea4a176b804a48f3244a7addb25"
+    },
+    {
+      "archive": "data/issue-offhost/endtoend-v1-1-full-42093791834/target.tar.gz",
+      "bytes": 6299015,
+      "member": "issue-endtoend/serial-5/validation-state.json",
+      "sha256": "815b433d8c30d6ab0ece1c8f75f82dfd3b09000cbcec67c2171252aa855815f2"
+    },
+    {
+      "archive": "data/issue-offhost/endtoend-v1-1-full-42093791834/observer.tar.gz",
+      "bytes": 13209,
+      "member": "issue-endtoend/serial-7/operations.json.gz",
+      "sha256": "ca4287c7bc2c3abbf9c5b8011b1de0f76a3064614278181f378e6c3869664afd"
+    },
+    {
+      "archive": "data/issue-offhost/endtoend-v1-1-full-42093791834/observer.tar.gz",
+      "bytes": 8358,
+      "member": "issue-endtoend/serial-7/schedule.json",
+      "sha256": "6c8430cb770b7b303ec121e4bf337b4689e1ebc7b3197d6e4bc2fca933488eb5"
+    },
+    {
+      "archive": "data/issue-offhost/endtoend-v1-1-full-42093791834/observer.tar.gz",
+      "bytes": 51242,
+      "member": "issue-endtoend/serial-7/quiet/loaded-browser.json",
+      "sha256": "16f417e7a12df7be87f08c1a0ba5e599ab083cb9971e2377766087997ef5cb95"
+    },
+    {
+      "archive": "data/issue-offhost/endtoend-v1-1-full-42093791834/target.tar.gz",
+      "bytes": 29222,
+      "member": "issue-endtoend/serial-7/backend.jsonl",
+      "sha256": "f63922d3e0c18b95bd60c5c6beaa312a735812e5d089e535a9832a0686ef99a6"
+    },
+    {
+      "archive": "data/issue-offhost/endtoend-v1-1-full-42093791834/target.tar.gz",
+      "bytes": 6299015,
+      "member": "issue-endtoend/serial-7/validation-state.json",
+      "sha256": "a4141b4a4f43414af64f395563f974025ab9f15ddf5492a102d1d9bf9643e1ea"
+    }
+  ],
+  "native_samples": {
+    "comment": 24,
+    "read": 72,
+    "state": 24
+  },
+  "phase": "permitted_serial_profile",
+  "profile": {
+    "application": "issue-dashboard",
+    "evidence_sha256": "dd159b2f3bd8568f7e63bff4d2e80ef7b50833b9901d496799fc5967afd47c32",
+    "features": {
+      "csr_request_count": 2,
+      "csr_serial_paint_median_ms": 148,
+      "db_logical_cpus": 1,
+      "fixture_rows": 100000,
+      "pool_size": 4,
+      "read_payload_bytes": 2355.5,
+      "read_service_cv": 0.16656546659868046,
+      "read_service_median_ms": 16.938663500013718,
+      "result_rows": 12.5,
+      "ssr_request_count": 1,
+      "ssr_serial_paint_median_ms": 100,
+      "target_logical_cpus": 2,
+      "write_a_service_median_ms": 3.1659429999990607,
+      "write_b_service_median_ms": 2.356542000029549
+    },
+    "phase": "permitted_serial_profile",
+    "query_candidate": "maintained-filter-first-v0",
+    "source_commit": "85860397ee9c40909d8b2092b464be3139dfab9f"
+  },
+  "run_id": "42093791834",
+  "source_commit": "85860397ee9c40909d8b2092b464be3139dfab9f"
+}
