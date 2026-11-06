@@ -1,0 +1,68 @@
+name: Public Release Preparation
+
+on:
+  workflow_dispatch:
+    inputs:
+      calendar_json:
+        type: string
+        required: true
+        description: Explicit prospective calendar JSON; 60 main dates and 1-4 earlier qualification dates
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-release-preparation
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: github.event.repository.private == false && github.repository == 'shravaniparsi/query-rendering-benchmark'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      PYTHONUNBUFFERED: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12.15'
+      - name: Verify prospective release contracts
+        run: python scripts/check_main_contracts.py --output ci-artifacts/main-contracts.json
+      - name: Prepare actual files and replay the unchanged development fit
+        id: prepare
+        env:
+          GH_TOKEN: ${{ github.token }}
+          QRL_CALENDAR_JSON: ${{ inputs.calendar_json }}
+        run: python scripts/prepare_main_release.py --calendar-env QRL_CALENDAR_JSON
+      - name: Retain verified or partial candidate files without enabling acquisition
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          QRL_REPO: ${{ github.repository }}
+          QRL_RUN_ID: ${{ github.run_id }}
+          QRL_RUN_ATTEMPT: ${{ github.run_attempt }}
+          QRL_SOURCE: ${{ github.sha }}
+          QRL_PREPARE_OUTCOME: ${{ steps.prepare.outcome }}
+        run: |
+          mkdir -p ci-artifacts
+          if [ -d release ]; then cp -R release ci-artifacts/release; fi
+          python - <<'PY'
+          import json, os, platform
+          from pathlib import Path
+          Path('ci-artifacts/run-identity.json').write_text(json.dumps({'run_id':os.environ['QRL_RUN_ID'],'run_attempt':os.environ['QRL_RUN_ATTEMPT'],'source_commit':os.environ['QRL_SOURCE'],'role':'actual release preparation and unchanged development fit replay only','benchmark_measurements':False,'prepare_step_outcome':os.environ['QRL_PREPARE_OUTCOME'],'platform':platform.platform()},indent=2)+'\n')
+          PY
+          QRL_STEM="public-release-preparation-${QRL_RUN_ID}-${QRL_RUN_ATTEMPT}"
+          python scripts/bundle_public_output.py --source ci-artifacts --bundle "/tmp/${QRL_STEM}.tar.gz" --manifest "/tmp/${QRL_STEM}.json"
+          QRL_TAG="release-preparation-${QRL_RUN_ID}"
+          printf '%s\n' 'Actual protocol/release candidate and exact unchanged model replay. No application performance acquisition. Candidate acceptance requires a passed independent artifact audit.' > /tmp/qrl-release-preparation-notes.txt
+          if ! gh release view "$QRL_TAG" --repo "$QRL_REPO" >/dev/null 2>&1; then
+            gh release create "$QRL_TAG" --repo "$QRL_REPO" --target "$QRL_SOURCE" --title "Release preparation ${QRL_RUN_ID}" --notes-file /tmp/qrl-release-preparation-notes.txt
+          fi
+          gh release upload "$QRL_TAG" --repo "$QRL_REPO" "/tmp/${QRL_STEM}.tar.gz" "/tmp/${QRL_STEM}.json"

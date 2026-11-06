@@ -1,6 +1,6 @@
 {
   "version": "public-benchmark-package-candidate-v1",
-  "source_private_checkpoint": "eb8feae93df1b4f79419b8793c80ffa1faee559f",
+  "source_private_checkpoint": "9f33973cc22ed5356cd698336a07e976933b627e",
   "working_tree_changes_present": false,
   "frozen_measurement_release": false,
   "private_git_history_copied": false,
@@ -9,8 +9,8 @@
   "files": [
     {
       "path": ".github/workflows/public-evidence-logs.yml",
-      "bytes": 2320,
-      "sha256": "64a8c933deea1562540b06e057d373120323a6a592d5a6c5538c3418b5e76a4d",
+      "bytes": 2561,
+      "sha256": "a5f42709c7489a67133731c5edc2d20e2e643ae4cbae964dbf9903d317c6998e",
       "source_path": "infra/public_execution/workflows/public-evidence-logs.yml"
     },
     {
@@ -26,9 +26,15 @@
       "source_path": "infra/public_execution/workflows/public-preflight.yml"
     },
     {
+      "path": ".github/workflows/public-release-prepare.yml",
+      "bytes": 3304,
+      "sha256": "d9f755a064ff1871ffe0a3bd09c47c975c24443eb4c00513732f2472c5e20ebf",
+      "source_path": "infra/public_execution/workflows/public-release-prepare.yml"
+    },
+    {
       "path": "README.md",
-      "bytes": 3388,
-      "sha256": "df36dab1d6c9b9579984c9fad5ef4248a1d37c1a2753768d23b525495c8f3ac3",
+      "bytes": 4078,
+      "sha256": "fe6201ebfbce87b5bcf2836a13b3ff1df0599c289e2c600ed98f355eb6c1ab5e",
       "source_path": "infra/public_execution/README.md"
     },
     {
@@ -932,6 +938,12 @@
       "source_path": "experiments/study_design/public_github.py"
     },
     {
+      "path": "experiments/study_design/release_preparation.py",
+      "bytes": 7104,
+      "sha256": "7cbb16d27ac53ba3db06a52e805af15c96d247acd534a3281b8b404bbb768bd7",
+      "source_path": "experiments/study_design/release_preparation.py"
+    },
+    {
       "path": "experiments/study_design/selection.py",
       "bytes": 4705,
       "sha256": "31a9b43bef87b56432342b0400f0ccae6e65ddae153db8ddbe937375f6dc9e2d",
@@ -999,8 +1011,8 @@
     },
     {
       "path": "scripts/check_main_contracts.py",
-      "bytes": 1326,
-      "sha256": "9727eab7e0142901cd5031d93a2bd16adb51ab05232370329ee7e45df031cc5c",
+      "bytes": 1356,
+      "sha256": "24ef9754ef536b22e6f2ad56c5a128b74692d7a499ddf6065bf140577e05bcc2",
       "source_path": "scripts/check_main_contracts.py"
     },
     {
@@ -1056,6 +1068,12 @@
       "bytes": 1761,
       "sha256": "28d4f7c5ea3d0d363e321860a9e2da2ee76f0eef253140901af41b9eb4653b1d",
       "source_path": "scripts/prepare_browser_cgroups.py"
+    },
+    {
+      "path": "scripts/prepare_main_release.py",
+      "bytes": 6070,
+      "sha256": "4085d4f4a3b0af132966bfed14bc727eb60f39e8a511df0505ab094b5a301539",
+      "source_path": "scripts/prepare_main_release.py"
     },
     {
       "path": "scripts/public_network_check.py",
@@ -1146,6 +1164,12 @@
       "bytes": 10271,
       "sha256": "23c25f35290f9d2c18d93ce9a95f1f023b8620c9a7e52aa19f8d6e3997f5fcaa",
       "source_path": "tests/test_public_execution.py"
+    },
+    {
+      "path": "tests/test_release_preparation.py",
+      "bytes": 3426,
+      "sha256": "f981e1f131e2732477b59e7317d5865a57ce38a930985eb65808c5336037596f",
+      "source_path": "tests/test_release_preparation.py"
     },
     {
       "path": "tests/test_reserved_analytics_sql.py",

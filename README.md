@@ -10,6 +10,8 @@ The manual `network-check` mode of Reserved Main Evaluation is an engineering ch
 
 Ordinary registration is verified through the provider's explicit non-ephemeral, single-use auth-key capabilities, requested with a ten-minute expiry through OIDC. The secret is used from a private temporary file and revoked after registration; only the non-secret acknowledgement is retained. Cleanup checks the exact node identity even after a failed mode check. A recovery option is restricted to the recorded nodes in the retained first failed engineering attempt.
 
+Public Release Preparation is a separate manual workflow. Given an explicit prospective calendar, it constructs the actual profile/context/decision/sample files, keeps the actual model/training bytes unchanged, binds the complete committed measurement source tree, and invokes the real seven-artifact verifier with exact development-fit replay on Linux/Python 3.12.15. It requires 60 future main dates and one to four earlier qualification dates. Its output is a retained candidate; promotion to a separate artifact commit and source-frozen qualification remain required. The workflow enables no acquisition flag, starts no application/database and needs no Tailscale identity permission.
+
 The original private repository, manuscript, accepted document and private Git history are excluded. `public-package-manifest.json` inventories every copied file by byte length and SHA-256. The package is assembled from an explicit entry-point list and local import closure; it does not copy a working directory or Git history wholesale.
 
 Local software checks:

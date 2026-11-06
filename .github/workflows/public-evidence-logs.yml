@@ -2,7 +2,7 @@ name: Preserve Public Execution Logs
 
 on:
   workflow_run:
-    workflows: ['Public Benchmark Preflight', 'Reserved Main Evaluation']
+    workflows: ['Public Benchmark Preflight', 'Reserved Main Evaluation', 'Public Release Preparation']
     types: [completed]
 
 permissions:
@@ -35,6 +35,9 @@ jobs:
           elif [ "$QRL_WORKFLOW" = 'Reserved Main Evaluation' ]; then
             QRL_STEM="public-execution-${QRL_RUN_ID}-${QRL_RUN_ATTEMPT}"
             QRL_TAG="execution-${QRL_RUN_ID}"
+          elif [ "$QRL_WORKFLOW" = 'Public Release Preparation' ]; then
+            QRL_STEM="public-release-preparation-${QRL_RUN_ID}-${QRL_RUN_ATTEMPT}"
+            QRL_TAG="release-preparation-${QRL_RUN_ID}"
           else
             exit 1
           fi
