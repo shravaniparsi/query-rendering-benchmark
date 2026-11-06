@@ -10,7 +10,7 @@ ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT));sys.path.i
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--output',type=Path,required=True);args=parser.parse_args()
-    patterns=('test_main_design.py','test_main_evidence.py','test_performance_permission.py','test_main_selection.py','test_calendar_analysis.py','test_public_execution.py','test_release_preparation.py')
+    patterns=('test_main_design.py','test_main_evidence.py','test_performance_permission.py','test_main_selection.py','test_calendar_analysis.py','test_public_execution.py','test_release_preparation.py','test_main_analysis.py','test_public_replay.py')
     suite=unittest.TestSuite(unittest.defaultTestLoader.discover(str(ROOT/'tests'),pattern=p) for p in patterns);result=unittest.TextTestRunner(verbosity=2).run(suite)
     value={'role':'pre-acquisition main software contracts; synthetic fixtures only','status':'passed' if result.wasSuccessful() and not result.skipped else 'failed',
         'run':result.testsRun,'skipped':len(result.skipped),'errors':len(result.errors),'failures':len(result.failures),'reserved_performance_acquired':False}
