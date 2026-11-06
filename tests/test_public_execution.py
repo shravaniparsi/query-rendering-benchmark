@@ -9,12 +9,27 @@ import unittest
 from unittest.mock import patch
 
 from experiments.study_design.public_github import GitHub,APIError,verify_claim
-from scripts.research_network import verify_own,verify_standard,cleanup,register,NetworkAPIError,TAG
+from scripts.research_network import verify_own,verify_standard,verify_key_receipt,cleanup,register,NetworkAPIError,TAG
 from scripts.public_network_check import context as network_context,REPOSITORY,WORKFLOW
 from scripts.recover_public_network import role_files,FAILED_RUN,FAILED_SOURCE
 
 
 class PublicExecutionContracts(unittest.TestCase):
+    def test_ordinary_registration_requires_explicit_short_single_use_key_acknowledgement(self):
+        name='qrl-1230-1-target';receipt={'description':name,'key_id':'k123CNTRL','created':'2026-11-06T00:00:00Z','expires':'2026-11-06T00:10:00Z',
+            'capabilities':{'devices':{'create':{'reusable':False,'ephemeral':False,'preauthorized':True,'tags':[TAG]}}}}
+        self.assertTrue(verify_key_receipt(receipt,name))
+        device={'nodeId':'n123CNTRL','hostname':name,'tags':[TAG],'isExternal':False}
+        self.assertTrue(verify_standard(device,device['nodeId'],name,receipt))
+        for key,value in (('ephemeral',True),('reusable',True),('preauthorized',False),('tags',['tag:production'])):
+            bad=deepcopy(receipt);bad['capabilities']['devices']['create'][key]=value
+            with self.subTest(key=key),self.assertRaises(ValueError):verify_standard(device,device['nodeId'],name,bad)
+        missing=deepcopy(receipt);del missing['capabilities']['devices']['create']['ephemeral']
+        with self.assertRaises(ValueError):verify_key_receipt(missing,name)
+        with self.assertRaises(ValueError):verify_key_receipt({**receipt,'expires':'2026-11-07T00:00:00Z'},name)
+        with self.assertRaises(ValueError):verify_key_receipt({**receipt,'description':'unrelated-host'},name)
+        with self.assertRaises(ValueError):verify_standard({**device,'isEphemeral':True},device['nodeId'],name,receipt)
+
     def test_recovery_rejects_changed_receipts_or_another_original_role(self):
         identity={'run_id':FAILED_RUN,'source_commit':FAILED_SOURCE,'run_attempt':'1','task':'inventory','role':'target','benchmark_measurements':False}
         raw=json.dumps(identity).encode();buffer=io.BytesIO()

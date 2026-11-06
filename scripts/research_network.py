@@ -5,6 +5,7 @@ selector does not establish a tag boundary for device removal. Use only a
 dedicated research tailnet after explicit approval of that scope.
 """
 import argparse
+from datetime import datetime
 import hashlib
 import io
 import json
@@ -54,6 +55,23 @@ def api(path,*,method='GET',token):
     return request_json('https://api.tailscale.com/api/v2/'+path,method=method,headers={'Authorization':'Bearer '+token})
 
 
+def auth_key_api(token,*,key_id=None,method='GET',value=None):
+    require((method=='POST' and key_id is None) or (method in ('GET','DELETE') and isinstance(key_id,str) and re.fullmatch('[A-Za-z0-9]+',key_id)),
+        'only create or inspect/revoke the exact issued auth key')
+    path='tailnet/-/keys'+('/'+key_id if key_id is not None else '')
+    return request_json('https://api.tailscale.com/api/v2/'+path,method=method,data=json.dumps(value).encode() if value is not None else None,
+        headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'})
+
+
+def verify_key_receipt(receipt,name):
+    create=receipt['capabilities']['devices']['create']
+    require(receipt['description']==name and re.fullmatch('[A-Za-z0-9]+',receipt['key_id']) and create.get('ephemeral') is False and create.get('reusable') is False
+        and create.get('preauthorized') is True and create.get('tags')==[TAG],'explicit single-use ordinary research key acknowledgement required')
+    created=datetime.fromisoformat(receipt['created'].replace('Z','+00:00'));expires=datetime.fromisoformat(receipt['expires'].replace('Z','+00:00'))
+    require(created.tzinfo is not None and expires.tzinfo is not None and 0<(expires-created).total_seconds()<=601,'research registration key must expire within ten minutes')
+    return True
+
+
 def hostname(task,role):
     require(task in ('inventory','analytics') and role in ('target','observer') and os.environ['GITHUB_RUN_ATTEMPT']=='1','fixed research role/first attempt required')
     return 'qrl-'+os.environ['GITHUB_RUN_ID']+('0' if task=='inventory' else '1')+'-1-'+role
@@ -65,9 +83,12 @@ def verify_own(device,node_id,name):
     return True
 
 
-def verify_standard(device,node_id,name):
+def verify_standard(device,node_id,name,key_receipt=None):
     verify_own(device,node_id,name)
-    require(device.get('isEphemeral') is False,'provider did not explicitly confirm ordinary non-ephemeral registration')
+    if key_receipt is None:require(device.get('isEphemeral') is False,'provider did not explicitly confirm ordinary non-ephemeral registration')
+    else:
+        verify_key_receipt(key_receipt,name)
+        require(device.get('isEphemeral') is not True,'device status contradicts the acknowledged non-ephemeral registration key')
     return True
 
 
@@ -85,7 +106,7 @@ def register(output,name):
     token=access_token();listed=api('tailnet/-/devices?fields=all',token=token)['devices']
     allowed={f"qrl-{os.environ['GITHUB_RUN_ID']}{suffix}-1-{role}" for suffix in ('0','1') for role in ('target','observer')}-{name}
     require(len(listed)<4 and len({d.get('hostname') for d in listed})==len(listed)
-        and all(d.get('hostname') in allowed and d.get('tags')==[TAG] and d.get('isEphemeral') is False and d.get('isExternal') is not True for d in listed),
+        and all(d.get('hostname') in allowed and d.get('tags')==[TAG] and d.get('isEphemeral') is not True and d.get('isExternal') is not True for d in listed),
         'dedicated research network must contain only this run\'s other standard nodes; unrelated or previous nodes require attention')
     install_client();subprocess.run(['sudo','-n','install','-d','-m','0755','/var/run/tailscale'],check=True,capture_output=True)
     with Path('/tmp/qrl-tailscaled-private.log').open('w') as log:
@@ -95,16 +116,32 @@ def register(output,name):
     deadline=time.monotonic()+10
     while not Path('/var/run/tailscale/tailscaled.sock').exists():
         require(time.monotonic()<deadline,'research overlay socket did not become ready');time.sleep(.1)
-    client_id=os.environ['QRL_TS_CLIENT_ID']+'?ephemeral=false&preauthorized=true'
-    command=['sudo','-n','-E','/usr/local/bin/tailscale','up','--client-id='+client_id,'--audience='+os.environ['QRL_TS_AUDIENCE'],'--advertise-tags='+TAG,
-        '--hostname='+name,'--accept-routes=false','--accept-dns=false','--timeout=2m']
-    result=subprocess.run(command,capture_output=True,timeout=150);require(result.returncode==0,'standard tagged research-node registration failed; no auth output exported')
+    issued=auth_key_api(token,method='POST',value={'description':name,'expirySeconds':600,
+        'capabilities':{'devices':{'create':{'reusable':False,'ephemeral':False,'preauthorized':True,'tags':[TAG]}}}})
+    secret=issued.pop('key');receipt={'description':issued['description'],'key_id':issued['id'],'created':issued['created'],'expires':issued['expires'],'capabilities':issued['capabilities']}
+    # Retain only non-secret provider acknowledgement. The disposable secret lives
+    # in a private temporary file and is never a command argument or CI artifact.
+    output.parent.mkdir(parents=True,exist_ok=True);output.with_name('registration-auth-key.json').write_text(json.dumps(receipt,indent=2)+'\n')
+    try:
+        verify_key_receipt(receipt,name);require(isinstance(secret,str) and secret.startswith('tskey-auth-') and 20<len(secret)<500,'issued one-time registration key required')
+        with tempfile.NamedTemporaryFile(mode='w',prefix='qrl-private-registration-',suffix='.key') as key_file:
+            key_file.write(secret);key_file.flush()
+            command=['sudo','-n','/usr/local/bin/tailscale','up','--auth-key=file:'+key_file.name,'--advertise-tags='+TAG,
+                '--hostname='+name,'--accept-routes=false','--accept-dns=false','--timeout=2m']
+            result=subprocess.run(command,capture_output=True,timeout=150);require(result.returncode==0,'standard tagged research-node registration failed; no auth output exported')
+    finally:
+        secret=None
+        try:auth_key_api(token,key_id=receipt['key_id'],method='DELETE')
+        except NetworkAPIError as error:
+            if error.status!=404:raise
     status=json.loads(subprocess.run(['tailscale','status','--json'],check=True,capture_output=True,text=True).stdout);node_id=status['Self']['ID']
     record={'hostname':name,'node_id':node_id,'tag':TAG,'registration_mode':'standard-tagged-v1','client_version':VERSION,'client_tarball_sha256':BINARY_SHA,'verified_standard_node':False}
     output.parent.mkdir(parents=True,exist_ok=True);output.write_text(json.dumps(record,indent=2)+'\n')
     device=api('device/'+node_id+'?fields=all',token=token)
     record['provider_fields']=sorted(device);record['provider_is_ephemeral']=device.get('isEphemeral');output.write_text(json.dumps(record,indent=2)+'\n')
-    verify_standard(device,node_id,name);require(status['BackendState']=='Running' and status['TUN'] is True,'running kernel overlay required')
+    verify_standard(device,node_id,name,receipt);require(status['BackendState']=='Running' and status['TUN'] is True,'running kernel overlay required')
+    record['ordinary_mode_confirmation']='explicit non-ephemeral, single-use auth-key acknowledgement issued through short-lived OIDC'
+    record['registration_auth_key_id']=receipt['key_id']
     record['verified_standard_node']=True;output.write_text(json.dumps(record,indent=2)+'\n');print(json.dumps({'status':'registered','hostname':name,'tag':TAG,'ephemeral':False}))
 
 

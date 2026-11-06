@@ -1,6 +1,6 @@
 {
   "version": "public-benchmark-package-candidate-v1",
-  "source_private_checkpoint": "fdabb946f4320ab5ed8729d7f06f9bae2aa0124d",
+  "source_private_checkpoint": "eb8feae93df1b4f79419b8793c80ffa1faee559f",
   "working_tree_changes_present": false,
   "frozen_measurement_release": false,
   "private_git_history_copied": false,
@@ -27,8 +27,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 2918,
-      "sha256": "a459625bb7aa2dd5561807ec4de80b64af499ef5a7ea84bed47e863960df617c",
+      "bytes": 3388,
+      "sha256": "df36dab1d6c9b9579984c9fad5ef4248a1d37c1a2753768d23b525495c8f3ac3",
       "source_path": "infra/public_execution/README.md"
     },
     {
@@ -1077,8 +1077,8 @@
     },
     {
       "path": "scripts/research_network.py",
-      "bytes": 9475,
-      "sha256": "cb46c543d77bb76b03ac809197c65ac887703de96babb6668c6ec26bfabb2a81",
+      "bytes": 12409,
+      "sha256": "8f88fe2a23908a8f2db954469c481173b2a3c2dd371a39c714bc675b0339252f",
       "source_path": "scripts/research_network.py"
     },
     {
@@ -1143,8 +1143,8 @@
     },
     {
       "path": "tests/test_public_execution.py",
-      "bytes": 8822,
-      "sha256": "b1393ed29579d56c27a0720d16b479891908f2cd7c9ceee196d364445624c2ef",
+      "bytes": 10271,
+      "sha256": "23c25f35290f9d2c18d93ce9a95f1f023b8620c9a7e52aa19f8d6e3997f5fcaa",
       "source_path": "tests/test_public_execution.py"
     },
     {
