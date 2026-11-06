@@ -60,8 +60,14 @@ def hostname(task,role):
 
 
 def verify_own(device,node_id,name):
-    require(device['nodeId']==node_id and device['hostname']==name and device['tags']==[TAG] and device['isEphemeral'] is False and device.get('isExternal') is not True,
-        'device is not this run\'s exclusively tagged standard research node')
+    require(device['nodeId']==node_id and device['hostname']==name and device['tags']==[TAG] and device.get('isExternal') is not True,
+        'device is not this run\'s exclusively tagged research node')
+    return True
+
+
+def verify_standard(device,node_id,name):
+    verify_own(device,node_id,name)
+    require(device.get('isEphemeral') is False,'provider did not explicitly confirm ordinary non-ephemeral registration')
     return True
 
 
@@ -76,7 +82,7 @@ def install_client():
 
 
 def register(output,name):
-    token=access_token();listed=api('tailnet/-/devices',token=token)['devices']
+    token=access_token();listed=api('tailnet/-/devices?fields=all',token=token)['devices']
     allowed={f"qrl-{os.environ['GITHUB_RUN_ID']}{suffix}-1-{role}" for suffix in ('0','1') for role in ('target','observer')}-{name}
     require(len(listed)<4 and len({d.get('hostname') for d in listed})==len(listed)
         and all(d.get('hostname') in allowed and d.get('tags')==[TAG] and d.get('isEphemeral') is False and d.get('isExternal') is not True for d in listed),
@@ -96,7 +102,9 @@ def register(output,name):
     status=json.loads(subprocess.run(['tailscale','status','--json'],check=True,capture_output=True,text=True).stdout);node_id=status['Self']['ID']
     record={'hostname':name,'node_id':node_id,'tag':TAG,'registration_mode':'standard-tagged-v1','client_version':VERSION,'client_tarball_sha256':BINARY_SHA,'verified_standard_node':False}
     output.parent.mkdir(parents=True,exist_ok=True);output.write_text(json.dumps(record,indent=2)+'\n')
-    device=api('device/'+node_id,token=token);verify_own(device,node_id,name);require(status['BackendState']=='Running' and status['TUN'] is True,'running kernel overlay required')
+    device=api('device/'+node_id+'?fields=all',token=token)
+    record['provider_fields']=sorted(device);record['provider_is_ephemeral']=device.get('isEphemeral');output.write_text(json.dumps(record,indent=2)+'\n')
+    verify_standard(device,node_id,name);require(status['BackendState']=='Running' and status['TUN'] is True,'running kernel overlay required')
     record['verified_standard_node']=True;output.write_text(json.dumps(record,indent=2)+'\n');print(json.dumps({'status':'registered','hostname':name,'tag':TAG,'ephemeral':False}))
 
 
@@ -110,15 +118,16 @@ def cleanup(output,name):
     else:
         record=json.loads(output.read_bytes());require(record['hostname']==name and record['tag']==TAG,'cleanup ownership record differs');node_id=record['node_id']
     require(re.fullmatch('[A-Za-z0-9]+',node_id),'bounded native node identity required');token=access_token()
-    try:device=api('device/'+node_id,token=token)
+    try:device=api('device/'+node_id+'?fields=all',token=token)
     except NetworkAPIError as error:
         if error.status!=404:raise
         device=None
     if device is not None:verify_own(device,node_id,name);api('device/'+node_id,method='DELETE',token=token)
-    try:api('device/'+node_id,token=token)
+    try:api('device/'+node_id+'?fields=all',token=token)
     except NetworkAPIError as error:require(error.status==404,'node deletion verification failed')
     else:raise ValueError('standard research node remains registered')
-    subprocess.run(['sudo','-n','tailscale','logout'],capture_output=True,check=False,timeout=30)
+    try:subprocess.run(['sudo','-n','tailscale','logout'],capture_output=True,check=False,timeout=30)
+    except FileNotFoundError:pass  # API-only recovery needs no local client installation.
     path=output.with_name('network-cleanup.json');path.write_text(json.dumps({'status':'removed','hostname':name,'node_id':node_id,'tag':TAG,'verified_absent':True},indent=2)+'\n');print(json.dumps({'status':'removed','hostname':name,'tag':TAG}))
 
 

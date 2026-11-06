@@ -1,17 +1,32 @@
 from copy import deepcopy
 import hashlib
+import io
 import json
 from pathlib import Path
 import tempfile
+import tarfile
 import unittest
 from unittest.mock import patch
 
 from experiments.study_design.public_github import GitHub,APIError,verify_claim
-from scripts.research_network import verify_own,cleanup,register,NetworkAPIError,TAG
+from scripts.research_network import verify_own,verify_standard,cleanup,register,NetworkAPIError,TAG
 from scripts.public_network_check import context as network_context,REPOSITORY,WORKFLOW
+from scripts.recover_public_network import role_files,FAILED_RUN,FAILED_SOURCE
 
 
 class PublicExecutionContracts(unittest.TestCase):
+    def test_recovery_rejects_changed_receipts_or_another_original_role(self):
+        identity={'run_id':FAILED_RUN,'source_commit':FAILED_SOURCE,'run_attempt':'1','task':'inventory','role':'target','benchmark_measurements':False}
+        raw=json.dumps(identity).encode();buffer=io.BytesIO()
+        with tarfile.open(fileobj=buffer,mode='w:gz') as archive:
+            member=tarfile.TarInfo('public-network-identity.json');member.size=len(raw);archive.addfile(member,io.BytesIO(raw))
+        data=buffer.getvalue();manifest={'sha256':hashlib.sha256(data).hexdigest(),'bytes':len(data),'files':[{'path':'public-network-identity.json','bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()}]}
+        self.assertIn('public-network-identity.json',role_files(data,manifest,'inventory','target'))
+        for value,role in (({**manifest,'sha256':'0'*64},'target'),(manifest,'observer')):
+            with self.assertRaises(ValueError):role_files(data,value,'inventory',role)
+        bad=deepcopy(manifest);bad['files'][0]['sha256']='0'*64
+        with self.assertRaises(ValueError):role_files(data,bad,'inventory','target')
+
     def test_network_check_rejects_wrong_source_event_repository_or_workflow(self):
         api=GitHub(REPOSITORY,'synthetic-token');env={'GITHUB_REPOSITORY':REPOSITORY,'GITHUB_SHA':'1'*40,'QRL_NETWORK_EXECUTION_SHA':'1'*40,
             'GITHUB_RUN_ID':'123','GITHUB_RUN_ATTEMPT':'1','GITHUB_EVENT_NAME':'workflow_dispatch','GITHUB_REF':'refs/heads/main',
@@ -52,8 +67,13 @@ class PublicExecutionContracts(unittest.TestCase):
     def test_cleanup_deletes_only_the_exact_standard_research_node(self):
         good={'nodeId':'n123CNTRL','hostname':'qrl-1230-1-target','tags':[TAG],'isEphemeral':False,'isExternal':False}
         self.assertTrue(verify_own(good,good['nodeId'],good['hostname']))
-        for key,value in (('hostname','unrelated-host'),('tags',['tag:production']),('isEphemeral',True),('nodeId','other')):
+        for key,value in (('hostname','unrelated-host'),('tags',['tag:production']),('nodeId','other')):
             with self.assertRaises(ValueError):verify_own({**good,key:value},good['nodeId'],good['hostname'])
+        for flag in (True,None):
+            device={k:v for k,v in good.items() if k!='isEphemeral'}
+            if flag is True:device['isEphemeral']=True
+            self.assertTrue(verify_own(device,good['nodeId'],good['hostname']))
+            with self.assertRaises(ValueError):verify_standard(device,good['nodeId'],good['hostname'])
         with tempfile.TemporaryDirectory() as temp:
             output=Path(temp)/'network-registration.json';output.write_text(json.dumps({'hostname':good['hostname'],'node_id':good['nodeId'],'tag':TAG}))
             with patch('scripts.research_network.access_token',return_value='synthetic-token'),patch('scripts.research_network.api',side_effect=[good,{},NetworkAPIError(404)]) as api,patch('scripts.research_network.subprocess.run'):
@@ -62,6 +82,9 @@ class PublicExecutionContracts(unittest.TestCase):
             with patch('scripts.research_network.access_token',return_value='synthetic-token'),patch('scripts.research_network.api',return_value={**good,'tags':['tag:production']}) as api:
                 with self.assertRaises(ValueError):cleanup(output,good['hostname'])
                 self.assertEqual(api.call_count,1)
+            no_mode={k:v for k,v in good.items() if k!='isEphemeral'}
+            with patch('scripts.research_network.access_token',return_value='synthetic-token'),patch('scripts.research_network.api',side_effect=[no_mode,{},NetworkAPIError(404)]) as api,patch('scripts.research_network.subprocess.run',side_effect=FileNotFoundError):
+                cleanup(output,good['hostname']);self.assertEqual(api.call_args_list[1].kwargs['method'],'DELETE')
 
     def test_unrelated_or_previous_nodes_stop_before_client_install_or_registration(self):
         sibling={'hostname':'qrl-1231-1-observer','tags':[TAG],'isEphemeral':False,'isExternal':False}
