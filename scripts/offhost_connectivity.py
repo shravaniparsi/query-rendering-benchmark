@@ -81,9 +81,16 @@ def check_pair(local,remote):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--role',choices=('target','observer'),required=True)
+    parser.add_argument('--task',choices=('inventory','analytics'),help='separate pair namespace for the four-runner network-only check')
     parser.add_argument('--require-direct',choices=('true','false'),default='true');args=parser.parse_args()
     run,attempt,commit=(os.environ[k] for k in ('GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT','GITHUB_SHA'))
+    github_run=run
+    if args.task:
+        run+=('0' if args.task=='inventory' else '1')
+        for key in ('ACTIONS_ID_TOKEN_REQUEST_URL','ACTIONS_ID_TOKEN_REQUEST_TOKEN','GH_TOKEN','GITHUB_TOKEN'):
+            os.environ.pop(key,None)
     own=manifest(args.role,run,attempt,commit);peer_name=node_name(run,attempt,'observer' if args.role=='target' else 'target')
+    if args.task:own.update(github_run_id=github_run,task=args.task)
     output=Path('ci-artifacts/offhost-connectivity');output.mkdir(parents=True,exist_ok=False)
     report={'role':'two-runner private-network engineering preflight','benchmark_measurements':False,'local':own,'status':'started'}
     try:

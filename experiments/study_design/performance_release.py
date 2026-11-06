@@ -3,6 +3,7 @@ from datetime import datetime,timezone
 import hashlib
 import json
 from pathlib import Path
+import subprocess
 from .artifact_release import verify_release
 from .decision import require
 
@@ -34,6 +35,9 @@ class PerformancePermission:
         self.checked=verify_release(self.root,release_path,expected_release_sha256=expected_sha256)
         release=json.loads((self.root/release_path).read_bytes())
         require(PERFORMANCE_SOURCES<=set(release['source_files']),'complete frozen performance collector/measurement sources required')
+        tracked=subprocess.run(['git','ls-tree','-r','--name-only',self.checked['model_source_commit']],cwd=self.root,check=True,capture_output=True,text=True).stdout.splitlines()
+        code={p for p in tracked if p.startswith(('experiments/','scripts/','apps/','.github/workflows/')) and Path(p).suffix in ('.py','.cjs','.js','.html','.json','.txt','.yml')}
+        require(code<=set(release['source_files']),'complete curated measurement code/dependency/workflow source tree required')
         self.artifacts=self.checked['artifacts'];self._source_sha=release['source_files']
         # This imported gate must be the code whose bytes were actually checked.
         own='experiments/study_design/performance_release.py'

@@ -1,8 +1,8 @@
-name: Preserve Public Validation Logs
+name: Preserve Public Execution Logs
 
 on:
   workflow_run:
-    workflows: ['Public Benchmark Preflight']
+    workflows: ['Public Benchmark Preflight', 'Reserved Main Evaluation']
     types: [completed]
 
 permissions:
@@ -25,15 +25,23 @@ jobs:
       QRL_RUN_ID: ${{ github.event.workflow_run.id }}
       QRL_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
       QRL_SOURCE: ${{ github.event.workflow_run.head_sha }}
+      QRL_WORKFLOW: ${{ github.event.workflow_run.name }}
     steps:
       - name: Retain completed job metadata and complete masked Actions logs
         run: |
-          QRL_STEM="public-validation-${QRL_RUN_ID}-${QRL_RUN_ATTEMPT}"
-          gh run view "$QRL_RUN_ID" --repo "$QRL_REPO" --json databaseId,headSha,status,conclusion,jobs,url,createdAt,updatedAt,event,workflowName > "/tmp/${QRL_STEM}-metadata.json"
-          gh run view "$QRL_RUN_ID" --repo "$QRL_REPO" --log > "/tmp/${QRL_STEM}-all-jobs.log"
-          QRL_TAG="validation-${QRL_RUN_ID}"
-          printf '%s\n' 'Retained validation metadata and masked complete job logs, including failed attempts.' > /tmp/qrl-log-notes.txt
+          if [ "$QRL_WORKFLOW" = 'Public Benchmark Preflight' ]; then
+            QRL_STEM="public-validation-${QRL_RUN_ID}-${QRL_RUN_ATTEMPT}"
+            QRL_TAG="validation-${QRL_RUN_ID}"
+          elif [ "$QRL_WORKFLOW" = 'Reserved Main Evaluation' ]; then
+            QRL_STEM="public-execution-${QRL_RUN_ID}-${QRL_RUN_ATTEMPT}"
+            QRL_TAG="execution-${QRL_RUN_ID}"
+          else
+            exit 1
+          fi
+          gh run view "$QRL_RUN_ID" --repo "$QRL_REPO" --attempt "$QRL_RUN_ATTEMPT" --json databaseId,headSha,status,conclusion,jobs,url,createdAt,updatedAt,event,workflowName > "/tmp/${QRL_STEM}-metadata.json"
+          gh run view "$QRL_RUN_ID" --repo "$QRL_REPO" --attempt "$QRL_RUN_ATTEMPT" --log > "/tmp/${QRL_STEM}-all-jobs.log"
+          printf '%s\n' 'Retained run metadata and masked complete job logs, including failed attempts. Network checks, qualification and main evidence remain distinguished by the original run and role reports.' > /tmp/qrl-log-notes.txt
           if ! gh release view "$QRL_TAG" --repo "$QRL_REPO" >/dev/null 2>&1; then
-            gh release create "$QRL_TAG" --repo "$QRL_REPO" --target "$QRL_SOURCE" --title "Benchmark validation ${QRL_RUN_ID}" --notes-file /tmp/qrl-log-notes.txt
+            gh release create "$QRL_TAG" --repo "$QRL_REPO" --target "$QRL_SOURCE" --title "Benchmark execution ${QRL_RUN_ID}" --notes-file /tmp/qrl-log-notes.txt
           fi
           gh release upload "$QRL_TAG" --repo "$QRL_REPO" "/tmp/${QRL_STEM}-metadata.json" "/tmp/${QRL_STEM}-all-jobs.log"

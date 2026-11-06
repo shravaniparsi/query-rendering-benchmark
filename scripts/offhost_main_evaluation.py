@@ -13,6 +13,7 @@ import time
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT))
 from experiments.heldout_tasks.inventory import require
 from experiments.study_design.performance_release import PerformancePermission
+from experiments.study_design.public_github import GitHub,verify_claim
 
 
 def execution_environment(permission,day,smoke):
@@ -29,14 +30,21 @@ def execution_environment(permission,day,smoke):
     require(day in sample['collection_dates_utc'] or day in sample.get('qualification_dates_utc',[]),'unplanned real UTC date')
     require(datetime.now(timezone.utc).date().isoformat()==day,'actual date differs from claimed UTC date')
     require(len(os.sched_getaffinity(0))>=4,'public standard host must expose at least four CPUs before selecting two')
+    api=GitHub(repo,os.environ.pop('QRL_GITHUB_READ_TOKEN'));api.require_public()
+    claim=verify_claim(api,os.environ['QRL_DATE_CLAIM_SHA'],day=day,mode='qualification' if smoke else 'main',run_id=os.environ['GITHUB_RUN_ID'],source=os.environ['GITHUB_SHA'],release_sha=permission.expected_sha256)
     return {'status':'passed','additional_spending_limit':0,'repository':repo,'visibility':'public','github_run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':'1',
-        'collection_date_utc':day,'execution_source_commit':os.environ['GITHUB_SHA'],'release_sha256':permission.expected_sha256,'full_host_cpus':sorted(os.sched_getaffinity(0))}
+        'collection_date_utc':day,'execution_source_commit':os.environ['GITHUB_SHA'],'release_sha256':permission.expected_sha256,'full_host_cpus':sorted(os.sched_getaffinity(0)),
+        'calendar_claim_sha':os.environ['QRL_DATE_CLAIM_SHA'],'verified_calendar_claim':claim}
 
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--role',choices=('target','observer'),required=True);parser.add_argument('--task',choices=('inventory','analytics'),required=True)
     parser.add_argument('--day',required=True);parser.add_argument('--release',required=True);parser.add_argument('--release-sha256',required=True);parser.add_argument('--smoke',action='store_true');args=parser.parse_args()
     permission=PerformancePermission(ROOT,args.release,args.release_sha256);authorization=execution_environment(permission,args.day,args.smoke)
+    # The application, native SQL service and browser receive no CI token-request
+    # capability. Later workflow cleanup receives its own fresh step environment.
+    for name in ('ACTIONS_ID_TOKEN_REQUEST_URL','ACTIONS_ID_TOKEN_REQUEST_TOKEN','GH_TOKEN','GITHUB_TOKEN'):
+        os.environ.pop(name,None)
     # All acquisition imports follow actual artifact/source/public-date verification.
     from experiments.heldout_tasks.main_design import cells
     from experiments.heldout_tasks.performance_target import PerformanceTarget

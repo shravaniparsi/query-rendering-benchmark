@@ -1,0 +1,78 @@
+from copy import deepcopy
+import hashlib
+import json
+from pathlib import Path
+import tempfile
+import unittest
+from unittest.mock import patch
+
+from experiments.study_design.public_github import GitHub,APIError,verify_claim
+from scripts.research_network import verify_own,cleanup,register,NetworkAPIError,TAG
+from scripts.public_network_check import context as network_context,REPOSITORY,WORKFLOW
+
+
+class PublicExecutionContracts(unittest.TestCase):
+    def test_network_check_rejects_wrong_source_event_repository_or_workflow(self):
+        api=GitHub(REPOSITORY,'synthetic-token');env={'GITHUB_REPOSITORY':REPOSITORY,'GITHUB_SHA':'1'*40,'QRL_NETWORK_EXECUTION_SHA':'1'*40,
+            'GITHUB_RUN_ID':'123','GITHUB_RUN_ATTEMPT':'1','GITHUB_EVENT_NAME':'workflow_dispatch','GITHUB_REF':'refs/heads/main',
+            'GITHUB_WORKFLOW_REF':WORKFLOW,'QRL_STANDARD_TAGGED_NETWORK_APPROVED':'true'}
+        with patch.object(api,'require_public',return_value={'id':1447601875}):
+            self.assertFalse(network_context(api,env)['benchmark_measurements'])
+            for key,value in (('GITHUB_SHA','2'*40),('GITHUB_RUN_ATTEMPT','2'),('GITHUB_EVENT_NAME','schedule'),('GITHUB_REF','refs/heads/other'),
+                ('GITHUB_WORKFLOW_REF',WORKFLOW.replace('public-main-evaluation','other')),('GITHUB_REPOSITORY','other/repo'),('QRL_STANDARD_TAGGED_NETWORK_APPROVED','false')):
+                with self.subTest(key=key),self.assertRaises(ValueError):network_context(api,{**env,key:value})
+        with patch.object(api,'require_public',return_value={'id':1}),self.assertRaises(ValueError):network_context(api,env)
+
+    def test_claim_must_bind_the_current_ref_and_exact_source_attempt_and_envelope(self):
+        source='1'*40;claim='2'*40;release='3'*64;api=GitHub('owner/repo','synthetic-token')
+        message={'collection_date_utc':'2027-01-01','mode':'main','run_id':'123','run_attempt':'1','source_commit':source,'release_sha256':release}
+        tag={'object':{'type':'commit','sha':source,'url':api.base+'/git/commits/'+source},'tag':'campaign-2027-01-01','message':json.dumps(message)}
+        with patch.object(api,'call',side_effect=[tag,{'object':{'sha':claim,'type':'tag'}}]):self.assertEqual(verify_claim(api,claim,day='2027-01-01',mode='main',run_id='123',source=source,release_sha=release),message)
+        for changed in ('wrong-ref','wrong-attempt'):
+            candidate=deepcopy(tag)
+            if changed=='wrong-attempt':candidate['message']=json.dumps({**message,'run_attempt':'2'})
+            with patch.object(api,'call',side_effect=[candidate,{'object':{'sha':'9'*40,'type':'tag'}}]):
+                with self.assertRaises(ValueError):verify_claim(api,claim,day='2027-01-01',mode='main',run_id='123',source=source,release_sha=release)
+
+    def test_concurrent_release_creation_can_use_only_the_same_frozen_release(self):
+        api=GitHub('owner/repo','synthetic-token');value={'tag_name':'campaign-v1','target_commitish':'1'*40,'body':'3'*64}
+        with patch.object(api,'optional',return_value=None),patch.object(api,'call',side_effect=[APIError(422),value]):self.assertEqual(api.ensure_release('campaign-v1','1'*40,'3'*64),value)
+        with patch.object(api,'optional',return_value={**value,'target_commitish':'9'*40}):
+            with self.assertRaises(ValueError):api.ensure_release('campaign-v1','1'*40,'3'*64)
+
+    def test_existing_assets_cannot_be_clobbered_with_different_bytes(self):
+        api=GitHub('owner/repo','synthetic-token')
+        with tempfile.TemporaryDirectory() as temp:
+            path=Path(temp)/'evidence.json';path.write_bytes(b'synthetic evidence');asset={'name':path.name,'size':path.stat().st_size,'digest':'sha256:'+hashlib.sha256(path.read_bytes()).hexdigest()}
+            with patch.object(api,'call',return_value=[asset]) as called:self.assertEqual(api.upload({'id':1},path),asset);self.assertEqual(called.call_count,1)
+            with patch.object(api,'call',return_value=[{**asset,'digest':'sha256:'+'0'*64}]) as called:
+                with self.assertRaises(ValueError):api.upload({'id':1},path)
+                self.assertEqual(called.call_args.args[0],'GET')
+
+    def test_cleanup_deletes_only_the_exact_standard_research_node(self):
+        good={'nodeId':'n123CNTRL','hostname':'qrl-1230-1-target','tags':[TAG],'isEphemeral':False,'isExternal':False}
+        self.assertTrue(verify_own(good,good['nodeId'],good['hostname']))
+        for key,value in (('hostname','unrelated-host'),('tags',['tag:production']),('isEphemeral',True),('nodeId','other')):
+            with self.assertRaises(ValueError):verify_own({**good,key:value},good['nodeId'],good['hostname'])
+        with tempfile.TemporaryDirectory() as temp:
+            output=Path(temp)/'network-registration.json';output.write_text(json.dumps({'hostname':good['hostname'],'node_id':good['nodeId'],'tag':TAG}))
+            with patch('scripts.research_network.access_token',return_value='synthetic-token'),patch('scripts.research_network.api',side_effect=[good,{},NetworkAPIError(404)]) as api,patch('scripts.research_network.subprocess.run'):
+                cleanup(output,good['hostname']);self.assertEqual(api.call_args_list[1].args[0],'device/n123CNTRL');self.assertEqual(api.call_args_list[1].kwargs['method'],'DELETE')
+                self.assertTrue(json.loads(output.with_name('network-cleanup.json').read_bytes())['verified_absent'])
+            with patch('scripts.research_network.access_token',return_value='synthetic-token'),patch('scripts.research_network.api',return_value={**good,'tags':['tag:production']}) as api:
+                with self.assertRaises(ValueError):cleanup(output,good['hostname'])
+                self.assertEqual(api.call_count,1)
+
+    def test_unrelated_or_previous_nodes_stop_before_client_install_or_registration(self):
+        sibling={'hostname':'qrl-1231-1-observer','tags':[TAG],'isEphemeral':False,'isExternal':False}
+        invalid=[{**sibling,'hostname':'qrl-old-run-target'},{**sibling,'hostname':'qrl-12345-1-observer'},
+            {**sibling,'hostname':'personal-laptop','tags':[]},{**sibling,'tags':['tag:qrl-ci']},
+            {**sibling,'tags':[TAG,'tag:production']},{**sibling,'isExternal':True},
+            {**sibling,'isEphemeral':True},{**sibling,'hostname':'qrl-1230-1-target'}]
+        for device in invalid:
+            with self.subTest(device=device),patch.dict('os.environ',{'GITHUB_RUN_ID':'123'}),patch('scripts.research_network.access_token',return_value='synthetic-token'),patch('scripts.research_network.api',return_value={'devices':[device]}),patch('scripts.research_network.install_client') as install:
+                with self.assertRaises(ValueError):register(Path('/unused'),'qrl-1230-1-target')
+                install.assert_not_called()
+
+
+if __name__=='__main__':unittest.main()
