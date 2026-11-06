@@ -1,0 +1,154 @@
+{
+  "accepted_revision": {
+    "filename": "SPE_revised_manuscript.docx",
+    "role": "Prior-work contribution comparison only; no observations imported into fitting, scoring or precision inputs",
+    "sha256": "32d120186eb08c1232c96765b31c45842fc20af09394f12d92bb692e774c9048"
+  },
+  "application_registry": {
+    "path": "paper/followup/query-rendering-load/protocol/application_reservation_v1.json",
+    "sha256": "6fcf868257bf0b8bd3477be97f7c67358354f3dc95943d75669ec82a9663ee80"
+  },
+  "hindsight": "Per application/workload/threshold scenario best observed configuration, reference only; no fit/selection access",
+  "main_protocol_ready": true,
+  "policy": {
+    "abstention_predicted_probability_margin": 0.05,
+    "feature_allowlist": [
+      "csr_request_count",
+      "csr_serial_paint_median_ms",
+      "db_logical_cpus",
+      "fixture_rows",
+      "offered_rate",
+      "pool_size",
+      "read_fraction",
+      "read_payload_bytes",
+      "read_service_cv",
+      "read_service_median_ms",
+      "result_rows",
+      "ssr_request_count",
+      "ssr_serial_paint_median_ms",
+      "target_logical_cpus",
+      "write_a_fraction",
+      "write_a_service_median_ms",
+      "write_b_fraction",
+      "write_b_service_median_ms"
+    ],
+    "final_holdout_catalogs": {
+      "inventory-reservation": [
+        "correlated/ssr",
+        "correlated/csr",
+        "batched/ssr",
+        "batched/csr",
+        "maintained/ssr",
+        "maintained/csr"
+      ],
+      "time-window-analytics": [
+        "correlated/ssr",
+        "correlated/csr",
+        "batched/ssr",
+        "batched/csr",
+        "maintained/ssr",
+        "maintained/csr"
+      ]
+    },
+    "issue_development_catalog": [
+      "correlated/ssr",
+      "correlated/csr",
+      "batched/ssr",
+      "batched/csr",
+      "maintained/ssr",
+      "maintained/csr"
+    ],
+    "joint": "Use the unchanged development-trained feasibility model; joint may retain the informed query-only action under the frozen 0.05 predicted-score margin",
+    "margin_role": "Engineering switching criterion; five percentage points of predicted finite-workload feasibility, not user-experience importance",
+    "profile_fixed": "One query/rendering choice per application/threshold scenario from the same permitted profile budget; fixed across loaded workload contexts",
+    "query_only": "Query may vary with workload and threshold scenario; rendering fixed within application/scenario from permitted development/profile information"
+  },
+  "precision": {
+    "basis": "User-accepted fixed twenty-date budget; no measured between-day development variance or guaranteed power",
+    "conditional_planning": {
+      "assumed_day_sd": 0.1,
+      "degrees_of_freedom": 19,
+      "half_width": 0.0468009027690706,
+      "t95_rounded": 2.093
+    },
+    "fixed_days": 20,
+    "inconclusive": "Report insufficient precision or unsupported assumptions without extending collection",
+    "independent_unit": "UTC collection-day aggregate",
+    "main_n_selected": true,
+    "margin_units": "absolute standardized feasibility coverage; distinct from model prediction abstention",
+    "material_gain_threshold": 0.05,
+    "missing_components": "Keep original calendar/application weights and report identification bounds; no replacement or successful-day renormalization",
+    "planning_only": false,
+    "population_claims": "Conditional paired-day t interval only with complete dates and positive variance under its stated assumptions; bounded independent-day sensitivities reported separately",
+    "stopping": "fixed_days_no_effect_based_extension",
+    "target_95_interval_half_width": 0.05,
+    "zero_variance": "No point-width population t interval; separately labelled bounded independent-day sensitivities remain available"
+  },
+  "primary_comparator": "query_only",
+  "primary_contrast": "day-aggregated joint minus query_only standardized feasibility score",
+  "primary_question": "Does joint configuration selection improve standardized joint-feasibility coverage over an informed query-only baseline on reserved application tasks?",
+  "secondary_comparators": [
+    "profile_fixed"
+  ],
+  "semantics": {
+    "ambiguous_writes": "Configuration is infeasible",
+    "browser_clock": "Audited navigation-relative critical-content paint; only healthy, on-time/window-qualified probes count as completed",
+    "browser_endpoint": "Content-matched critical initial paint plus trusted reservation/cancellation or sale/refund completion; three landmarks and a four-second whole-task cap",
+    "integrity": "Invalid semantic/clock/source/route/CPU evidence stops scoring; valid performance failures score against the selected configuration",
+    "logical_denominator": "All offered operations, separately read/write_a/write_b; all failures, drops and censored records miss deadlines",
+    "population_reliability": "No per-request independent-Bernoulli certification is inferred from finite workload scores",
+    "read_clock": "complete_s minus intended_s, including dispatch lag"
+  },
+  "status": "frozen prospective main contract; acquisition still requires the actual release and planned-date checks",
+  "threshold_family": {
+    "completion_fraction": 0.99,
+    "deadline_fraction": 0.95,
+    "paint_deadlines_ms": [
+      250,
+      500,
+      1000
+    ],
+    "read_deadlines_ms": [
+      50,
+      100,
+      250
+    ],
+    "role": "development-chosen engineering sensitivity inputs; no claimed production or perceptual SLO",
+    "scenario_names": [
+      "read-50_write-50_paint-250",
+      "read-50_write-50_paint-500",
+      "read-50_write-50_paint-1000",
+      "read-50_write-100_paint-250",
+      "read-50_write-100_paint-500",
+      "read-50_write-100_paint-1000",
+      "read-50_write-250_paint-250",
+      "read-50_write-250_paint-500",
+      "read-50_write-250_paint-1000",
+      "read-100_write-50_paint-250",
+      "read-100_write-50_paint-500",
+      "read-100_write-50_paint-1000",
+      "read-100_write-100_paint-250",
+      "read-100_write-100_paint-500",
+      "read-100_write-100_paint-1000",
+      "read-100_write-250_paint-250",
+      "read-100_write-250_paint-500",
+      "read-100_write-250_paint-1000",
+      "read-250_write-50_paint-250",
+      "read-250_write-50_paint-500",
+      "read-250_write-50_paint-1000",
+      "read-250_write-100_paint-250",
+      "read-250_write-100_paint-500",
+      "read-250_write-100_paint-1000",
+      "read-250_write-250_paint-250",
+      "read-250_write-250_paint-500",
+      "read-250_write-250_paint-1000"
+    ],
+    "write_deadlines_ms": [
+      50,
+      100,
+      250
+    ]
+  },
+  "version": "main-decision-contract-v1",
+  "weights": "Equal application weights, equal physical workload contexts within application, equal threshold scenarios within context; aggregate all matched panels in a UTC collection-day block"
+}
