@@ -9,6 +9,7 @@ from .decision import require
 
 TASK_APPLICATIONS={'inventory':'inventory-reservation','analytics':'time-window-analytics'}
 PERFORMANCE_SOURCES={
+    'experiments/query_rendering_load/cpu_exec.py',
     'experiments/study_design/main_selection.py',
     'experiments/study_design/performance_release.py',
     'experiments/heldout_tasks/workload.py',
@@ -48,9 +49,9 @@ class PerformancePermission:
         today=datetime.now(timezone.utc).date().isoformat();require(today==collection_date_utc,'actual UTC date differs from declared acquisition day')
         sample=self.artifacts['sample_plan'];permitted=sample['collection_dates_utc']
         if phase=='qualification':permitted=sorted(set(permitted)|set(sample.get('qualification_dates_utc',[])))
-        else:require(collection_date_utc in sample['collection_dates_utc'] or sample.get('qualification_date_mode')=='complete_profile_and_loaded_smoke','qualification date does not permit serial/loaded acquisition')
+        else:require(collection_date_utc in sample['collection_dates_utc'] or sample.get('qualification_date_mode') in ('complete_profile_and_loaded_smoke','complete_profile_and_loaded_full_panel'),'qualification date does not permit serial/loaded acquisition')
         if collection_date_utc not in sample['collection_dates_utc']:
-            require(collection_date_utc in sample.get('qualification_dates_utc',[]) and sample.get('qualification_date_mode')=='complete_profile_and_loaded_smoke','actual date is outside the fixed acquisition/qualification plan')
+            require(collection_date_utc in sample.get('qualification_dates_utc',[]) and sample.get('qualification_date_mode') in ('complete_profile_and_loaded_smoke','complete_profile_and_loaded_full_panel'),'actual date is outside the fixed acquisition/qualification plan')
         require(collection_date_utc in permitted or collection_date_utc in sample.get('qualification_dates_utc',[]),'unplanned real UTC date')
         application=TASK_APPLICATIONS[task];contexts=self.artifacts['main_contexts'];catalog=contexts['catalogs'][application]
         require(candidate+'/'+strategy in catalog,'undeclared query/rendering performance configuration')

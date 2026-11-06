@@ -1,5 +1,6 @@
 from copy import deepcopy
 import hashlib
+import base64
 import io
 import json
 from pathlib import Path
@@ -12,9 +13,26 @@ from experiments.study_design.public_github import GitHub,APIError,verify_claim
 from scripts.research_network import verify_own,verify_standard,verify_key_receipt,cleanup,register,NetworkAPIError,TAG
 from scripts.public_network_check import context as network_context,REPOSITORY,WORKFLOW
 from scripts.recover_public_network import role_files,FAILED_RUN,FAILED_SOURCE
+from scripts.claim_public_date import qualification_block
 
 
 class PublicExecutionContracts(unittest.TestCase):
+    def test_qualification_cannot_repeat_same_source_or_exceed_two_claims(self):
+        sample={'qualification_attempt_limit':2,'qualification_budget_dates_utc':['2027-01-01','2027-01-02'],'campaign_id':'synthetic'}
+        api=GitHub('owner/repo','synthetic-token');message={'run_id':'123','source_commit':'1'*40,'release_sha256':'2'*64}
+        with patch.object(api,'optional',return_value={'object':{'type':'tag','sha':'3'*40}}),patch.object(api,'call',return_value={'message':json.dumps(message)}),patch('scripts.claim_public_date.verify_claim'):
+            self.assertIn('already attempted',qualification_block(api,sample,'2027-01-01','1'*40,{}))
+            self.assertIn('budget exhausted',qualification_block(api,sample,'2027-01-02','9'*40,{}))
+
+    def test_qualification_artifact_only_retry_is_blocked_but_code_correction_is_permitted(self):
+        sample={'qualification_attempt_limit':2,'qualification_budget_dates_utc':['2027-01-01','2027-01-02'],'campaign_id':'synthetic'}
+        api=GitHub('owner/repo','synthetic-token');raw=json.dumps({'source_files':{'collector.py':'old'}}).encode();message={'run_id':'123','source_commit':'1'*40,'release_sha256':hashlib.sha256(raw).hexdigest()}
+        def optional(path):return {'object':{'type':'tag','sha':'3'*40}} if path.endswith('2027-01-01') else None
+        def call(method,path,**kwargs):return {'message':json.dumps(message)} if path.startswith('/git/tags/') else {'encoding':'base64','content':base64.b64encode(raw).decode()}
+        with patch.object(api,'optional',side_effect=optional),patch.object(api,'call',side_effect=call),patch('scripts.claim_public_date.verify_claim'):
+            self.assertIn('source correction',qualification_block(api,sample,'2027-01-02','9'*40,{'collector.py':'old'}))
+            self.assertIsNone(qualification_block(api,sample,'2027-01-02','9'*40,{'collector.py':'corrected'}))
+
     def test_ordinary_registration_requires_explicit_short_single_use_key_acknowledgement(self):
         name='qrl-1230-1-target';receipt={'description':name,'key_id':'k123CNTRL','created':'2026-11-06T00:00:00Z','expires':'2026-11-06T00:10:00Z',
             'capabilities':{'devices':{'create':{'reusable':False,'ephemeral':False,'preauthorized':True,'tags':[TAG]}}}}

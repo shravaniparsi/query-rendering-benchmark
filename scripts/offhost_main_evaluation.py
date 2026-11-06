@@ -64,7 +64,10 @@ def main():
         'packages':{n:importlib.metadata.version(n) for n in ('Flask','gunicorn','psycopg','psutil')},'source_sha256':permission._source_sha}
     save(output/'report.json',report);target=server=None
     try:
-        state=network_state(own['overlay_name'],peer_name,timeout=300);report['network_discovery']=state
+        # Dependency installation is outside measurement and can finish several
+        # minutes apart on fresh runners. Bound rendezvous separately from all
+        # fixed acquisition windows and service/browser outcome deadlines.
+        state=network_state(own['overlay_name'],peer_name,timeout=900);report['network_discovery']=state
         if args.role=='observer':
             check_clock(output/'browser-clock.json');report['remote']=run_observer(output,own,peer_name,private_ip(state['peer']['TailscaleIPs']),args.task,args.day,args.smoke,permission,report['cells'])
         else:

@@ -27,7 +27,9 @@ def cells(artifacts,task,day,smoke=False):
         {(r['rows'],r['offered_rate'],r['nominal_write_fraction']) for r in selected}==set(itertools.product((1000,100000),(16,64),(.02,.5))) and
         set(catalog)=={q+'/'+r for q,r in itertools.product(('correlated','batched','maintained'),('ssr','csr'))} and
         len(catalog)==6 and all(r['duration_s']==20 for r in selected),'fixed main context grid required')
-    values=[]
+    mode=artifacts['sample_plan'].get('qualification_date_mode','complete_profile_and_loaded_smoke')
+    require(mode in ('complete_profile_and_loaded_smoke','complete_profile_and_loaded_full_panel'),'unknown qualification coverage')
+    small=smoke and mode=='complete_profile_and_loaded_smoke';values=[]
     def add(phase,config,rows,context=None):
         candidate,strategy=config.rsplit('/',1);row={'name':phase[0]+'-'+str(sum(v['phase']==phase for v in values)).zfill(3),'phase':phase,'task':task,'application':app,
             'rows':rows,'candidate':candidate,'query_kind':candidate,'strategy':strategy,'placement':'split','collection_date_utc':day,'smoke':smoke,
@@ -40,9 +42,9 @@ def cells(artifacts,task,day,smoke=False):
         for config in rotate(base,index+(rows==100000)):add('serial',config,rows)
     order=selected.copy();random.Random(SEED+(100 if task=='inventory' else 101)).shuffle(order)
     for context in rotate(order,index):
-        if smoke and context['rows']!=1000:continue
+        if small and context['rows']!=1000:continue
         for config in rotate(base,index+selected.index(context)):add('loaded',config,context['rows'],context)
-    require(len(values)==(42 if smoke else 66),'declared case count differs');return values
+    require(len(values)==(42 if small else 66),'declared case count differs');return values
 
 
 def trace_for(artifacts,case):

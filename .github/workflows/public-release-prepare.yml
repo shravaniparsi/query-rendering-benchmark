@@ -6,7 +6,7 @@ on:
       calendar_json:
         type: string
         required: true
-        description: Explicit prospective calendar JSON; 60 main dates and 1-4 earlier qualification dates
+        description: Prospective v2 calendar JSON with 20 main dates and 1-2 full qualification dates; v1 retained for historical replay
 
 permissions:
   contents: read

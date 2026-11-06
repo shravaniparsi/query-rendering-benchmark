@@ -46,5 +46,17 @@ class ReleasePreparationContracts(unittest.TestCase):
         self.registry['applications'][1]['role']='heldout';self.contract['threshold_family']['read_deadlines_ms'][0]=51
         with self.assertRaises(ValueError):self.build()
 
+    def test_compact_calendar_has_twenty_dates_full_qualification_and_explicit_precision_goal(self):
+        self.calendar.update(version='reserved-calendar-plan-v2',collection_dates_utc=self.calendar['collection_dates_utc'][:20],qualification_dates_utc=['2026-12-30','2026-12-31'])
+        value=self.build();self.assertEqual(value['sample_plan']['day_count'],20)
+        self.assertEqual(value['sample_plan']['qualification_attempt_limit'],2)
+        self.assertEqual(value['decision_contract']['precision']['target_95_interval_half_width'],.05)
+        for task in ('inventory','analytics'):self.assertEqual(len(cells(value,task,'2026-12-30',True)),66)
+        baseline=deepcopy(self.calendar)
+        for change in ({'collection_dates_utc':baseline['collection_dates_utc']+[baseline['collection_dates_utc'][-1]]},{'qualification_dates_utc':['2026-12-29']},
+            {'collection_dates_utc':baseline['collection_dates_utc'][:-1]+['2027-01-22']}):
+            self.calendar={**baseline,**change}
+            with self.subTest(change=change),self.assertRaises(ValueError):self.build()
+
 
 if __name__=='__main__':unittest.main()

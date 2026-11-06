@@ -1,6 +1,8 @@
 """Atomically claim one predeclared real UTC date before four-runner acquisition."""
 import argparse
+import base64
 from datetime import datetime,timezone
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -11,7 +13,30 @@ import sys
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT))
 from experiments.study_design.decision import require
 from experiments.study_design.performance_release import PerformancePermission
-from experiments.study_design.public_github import GitHub
+from experiments.study_design.public_github import GitHub,verify_claim
+
+
+def qualification_block(api,sample,day,source,sources):
+    """A failed source cannot consume the next date without a code correction."""
+    if sample.get('qualification_attempt_limit') is None:return None
+    dates=sample['qualification_budget_dates_utc'];require(sample['qualification_attempt_limit']==2 and len(dates)==2 and dates==sorted(set(dates)),'fixed two-date qualification budget required')
+    history=[]
+    for date in dates:
+        if date>day:continue
+        reference=api.optional('/git/ref/tags/qualification-'+sample['campaign_id']+'-'+date)
+        if reference is None:continue
+        require(reference['object']['type']=='tag','immutable annotated qualification history required')
+        tag=api.call('GET','/git/tags/'+reference['object']['sha']);message=json.loads(tag['message'])
+        verify_claim(api,reference['object']['sha'],day=date,mode='qualification',run_id=message['run_id'],source=message['source_commit'],release_sha=message['release_sha256'])
+        history.append(message)
+    if len(history)>=2:return 'fixed qualification attempt budget exhausted'
+    for row in history:
+        if row['source_commit']==source:return 'qualification already attempted from this execution source'
+        item=api.call('GET','/contents/release/release.json?ref='+row['source_commit']);require(item['encoding']=='base64','original actual release contents required')
+        raw=base64.b64decode(item['content'].replace('\n',''),validate=True)
+        require(hashlib.sha256(raw).hexdigest()==row['release_sha256'],'original qualification release digest differs')
+        if json.loads(raw)['source_files']==sources:return 'qualification retry requires a tested source correction; artifact-only changes are insufficient'
+    return None
 
 
 def main():
@@ -27,6 +52,11 @@ def main():
         require(not args.day and os.environ.get('GITHUB_EVENT_NAME')=='schedule','unplanned manually requested collection date')
         with Path(os.environ['GITHUB_OUTPUT']).open('a') as stream:stream.write('acquire=false\n')
         print(json.dumps({'status':'outside fixed calendar','acquisition_started':False}));return
+    if args.mode=='qualification':
+        reason=qualification_block(api,sample,day,source,permission._source_sha)
+        if reason:
+            with Path(os.environ['GITHUB_OUTPUT']).open('a') as stream:stream.write('acquire=false\n')
+            print(json.dumps({'status':reason,'acquisition_started':False}));return
     campaign=sample['campaign_id'];require(re.fullmatch('[a-z0-9-]{1,40}',campaign),'bounded campaign identity required');prefix=campaign if args.mode=='main' else 'qualification-'+campaign
     name=prefix+'-'+day;reference='/git/refs';message={'collection_date_utc':day,'mode':args.mode,'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':'1','source_commit':source,'release_sha256':args.release_sha256}
     require(api.optional('/git/ref/tags/'+name) is None,'calendar date already claimed; do not replace or re-run')

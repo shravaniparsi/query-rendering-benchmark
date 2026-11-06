@@ -126,7 +126,7 @@ jobs:
   configuration:
     if: >-
       github.event.repository.private == false &&
-      ((github.event_name == 'schedule' && vars.QRL_MAIN_ENABLED == 'true') ||
+      ((github.event_name == 'schedule' && (vars.QRL_MAIN_ENABLED == 'true' || vars.QRL_QUALIFICATION_ENABLED == 'true')) ||
       (inputs.mode == 'main' && vars.QRL_MAIN_ENABLED == 'true') ||
       (inputs.mode == 'qualification' && vars.QRL_QUALIFICATION_ENABLED == 'true'))
     runs-on: ubuntu-24.04
@@ -155,7 +155,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           QRL_FROZEN_EXECUTION_SHA: ${{ vars.QRL_FROZEN_EXECUTION_SHA }}
           QRL_RELEASE_SHA256: ${{ vars.QRL_RELEASE_SHA256 }}
-          QRL_MODE: ${{ inputs.mode || 'main' }}
+          QRL_MODE: ${{ inputs.mode || (vars.QRL_MAIN_ENABLED == 'true' && 'main' || 'qualification') }}
           QRL_REQUESTED_DAY: ${{ inputs.day }}
           QRL_STANDARD_TAGGED_NETWORK_APPROVED: ${{ vars.QRL_STANDARD_TAGGED_NETWORK_APPROVED }}
           QRL_TS_CLIENT_ID: ${{ vars.QRL_TS_CLIENT_ID }}

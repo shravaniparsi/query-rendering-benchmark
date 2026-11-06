@@ -60,5 +60,11 @@ class MainAnalysisContracts(unittest.TestCase):
         self.assertEqual(result['contrasts']['joint_minus_query_only']['lower']['value'],-.375)
         self.assertEqual(result['contrasts']['joint_minus_query_only']['upper']['value'],.625)
 
+    def test_identical_actions_give_exact_observed_panel_equality(self):
+        audited=self.audited();audited['choices']['choices']['joint']=deepcopy(audited['choices']['choices']['query_only'])
+        value=component(audited,self.artifacts,'3'*40)
+        self.assertTrue(value['observed_shared_action_equality']);self.assertEqual(value['primary_action_disagreements'],0)
+        self.assertEqual(value['contrasts']['joint_minus_query_only']['value'],0)
+
 
 if __name__=='__main__':unittest.main()

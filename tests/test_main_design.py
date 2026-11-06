@@ -44,5 +44,14 @@ class MainDesignContracts(unittest.TestCase):
         bad=deepcopy(value);bad['profile_protocol']['serial']['operations_per_renderer']=30
         with self.assertRaises(ValueError):cells(bad,'inventory','2026-11-10')
 
+    def test_full_qualification_keeps_both_scales_and_qualification_identity(self):
+        value=artifacts();value['sample_plan']['qualification_date_mode']='complete_profile_and_loaded_full_panel'
+        for task in APPLICATIONS:
+            full=cells(value,task,'2026-11-09',True)
+            self.assertEqual(len(full),66);self.assertTrue(all(r['smoke'] is True for r in full))
+            self.assertEqual({r['rows'] for r in full if r['phase']=='loaded'},{1000,100000})
+        value['sample_plan']['qualification_date_mode']='arbitrary_subset'
+        with self.assertRaises(ValueError):cells(value,'inventory','2026-11-09',True)
+
 
 if __name__=='__main__':unittest.main()

@@ -28,6 +28,8 @@ def component(audited,artifacts,claim_sha):
             selected=choices['choices'][policy];require(set(selected)==set(contexts) and len(selected[context])==27 and all(c in catalog for c in selected[context]),'policy context/action coverage differs')
     denominator=len(contexts)*len(names)
     scores={policy:Fraction(sum(panels[c][choices['choices'][policy][c][i]][i]['feasible'] for c in contexts for i in range(27)),denominator) for policy in POLICIES}
+    disagreements=sum(choices['choices']['joint'][c][i]!=choices['choices']['query_only'][c][i] for c in contexts for i in range(27))
+    require(abs(scores['joint']-scores['query_only'])<=Fraction(disagreements,denominator),'shared-panel contrast exceeds chosen-action disagreement')
     joint=query=fixed=0
     for i in range(27):
         joint+=sum(any(panels[c][config][i]['feasible'] for config in catalog) for c in contexts)
@@ -39,6 +41,8 @@ def component(audited,artifacts,claim_sha):
         'source_commit':audited['source_commit'],'run_id':audited['github_run_id'],'release_sha256':audited['release_sha256'],'claim_sha':claim_sha,
         'context_ids':contexts,'scenario_names':names,'finite_comparisons':denominator,'scores':{k:rational(v) for k,v in scores.items()},
         'contrasts':{k:rational(scores[a]-scores[b]) for k,(a,b) in CONTRASTS.items()},'hindsight_reference':{k:rational(v) for k,v in hindsight.items()},
+        'primary_action_disagreements':disagreements,'primary_action_disagreement_fraction':rational(Fraction(disagreements,denominator)),
+        'observed_shared_action_equality':disagreements==0,
         'hindsight_rendering_flexibility':rational(hindsight['joint']-hindsight['query_only']),
         'hindsight_query_adaptation':rational(hindsight['query_only']-hindsight['profile_fixed']),
         'hindsight_interpretation':'Perfect-information decomposition; not an upper bound on trained-policy gain over a suboptimal trained comparator',
