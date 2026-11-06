@@ -2,7 +2,7 @@
   "version": "public-benchmark-package-candidate-v1",
   "source_private_checkpoint": "640c93efdc1544a5ef55c21639f3795ac8c0b69c",
   "working_tree_changes_present": false,
-  "frozen_measurement_release": false,
+  "frozen_measurement_release": true,
   "private_git_history_copied": false,
   "manuscript_copied": false,
   "credentials_detected": false,
@@ -986,6 +986,48 @@
       "source_path": "paper/followup/query-rendering-load/protocol/reserved_workload_trace_v1_1.json"
     },
     {
+      "path": "release/calendar_input.json",
+      "bytes": 1424,
+      "sha256": "673e48607d3deb255c6514338c91abdf65eb5fabcb4ed6f91dd640d2f4491496",
+      "source_path": "release/calendar_input.json",
+      "origin": "verified actual Linux preparation run 42158621470"
+    },
+    {
+      "path": "release/decision_contract.json",
+      "bytes": 6190,
+      "sha256": "7c9d692b6e8aacdd2c57624ef04d1c7c1f5180405c05ed4f021c8ad22e444b24",
+      "source_path": "release/decision_contract.json",
+      "origin": "verified actual Linux preparation run 42158621470"
+    },
+    {
+      "path": "release/main_contexts.json",
+      "bytes": 3972,
+      "sha256": "717086375bef27bf97b611a9d41818dfc96bd9ac7653dc0258c4dfa33e974463",
+      "source_path": "release/main_contexts.json",
+      "origin": "verified actual Linux preparation run 42158621470"
+    },
+    {
+      "path": "release/profile_protocol.json",
+      "bytes": 2160,
+      "sha256": "a067f2ccf17e953caaf99d9124b8ae0aaf7e72b408fd28fab187fa9f6e49b244",
+      "source_path": "release/profile_protocol.json",
+      "origin": "verified actual Linux preparation run 42158621470"
+    },
+    {
+      "path": "release/release.json",
+      "bytes": 18156,
+      "sha256": "8386061aef804c72ddb7cc217660385c38e85b0e338781857f92000324f2d5b3",
+      "source_path": "release/release.json",
+      "origin": "verified actual Linux preparation run 42158621470"
+    },
+    {
+      "path": "release/sample_plan.json",
+      "bytes": 4106,
+      "sha256": "799f3ca2f515cadb762de5671d056ea3579c46b58c349b771a2716c1366192c0",
+      "source_path": "release/sample_plan.json",
+      "origin": "verified actual Linux preparation run 42158621470"
+    },
+    {
       "path": "scripts/audit_endtoend_distribution.py",
       "bytes": 28247,
       "sha256": "f3f6f3e0267ffb088f9f730a9861fd302936e5f780eae1b0fa7e56fa7c7dd329",
@@ -1261,5 +1303,11 @@
       "sha256": "1c57ae777bcd5b7dfcf11a34336c52b593f2825d1cbc90de0698dc60951c8d01",
       "source_path": "tests/test_study_design.py"
     }
-  ]
+  ],
+  "measurement_release": {
+    "release_sha256": "8386061aef804c72ddb7cc217660385c38e85b0e338781857f92000324f2d5b3",
+    "model_source_commit": "4d1c5196839a106c1667a68567ff00573f59e50a",
+    "preparation_run_id": "42158621470",
+    "additional_spending_limit": 0
+  }
 }
