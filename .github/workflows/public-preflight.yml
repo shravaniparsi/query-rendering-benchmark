@@ -62,6 +62,8 @@ jobs:
           python scripts/check_reserved_scale.py --rows 100000 --output ci-artifacts/largest-scale
           python scripts/check_reserved_scale_browser.py --paint-contract --rows 1000 --output ci-artifacts/reserved-scale-1000
           python scripts/check_reserved_scale_browser.py --paint-contract --rows 100000 --output ci-artifacts/reserved-scale-100000
+      - name: Verify failed refresh controls and the actual task-probe handler without performance acquisition
+        run: python scripts/check_reserved_refresh_failure.py --output ci-artifacts/refresh-failure-correctness
       - name: Preserve every available output as public release assets
         if: always()
         env:

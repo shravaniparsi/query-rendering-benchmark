@@ -126,7 +126,13 @@ def verify_browser(report,config,task,reference,events,allowed,writes,acknowledg
         require([v['snapshot'] for v in row['evidence']]==snapshots[:len(row['evidence'])],'rendered DOM snapshots differ from ordered native browser reads')
         for response in row['responses']:
             if response['path'] not in ('/api/task','/api/task/mutate'):continue
-            event=events[response['operation_id']];require(event['status']==response['status'] and event['path']==('/query' if response['path']=='/api/task' else '/control/mutate'),'browser API/native status or route differs')
+            event=events.get(response['operation_id'])
+            if event is not None:require(event['status']==response['status'] and event['path']==('/query' if response['path']=='/api/task' else '/control/mutate'),'browser API/native status or route differs')
+            else:
+                value=response['json'];error=value.get('error') if isinstance(value,dict) else None
+                require(response['operation_id'] in allowed and row['outcome']=='failed' and 400<=response['status']<=599 and isinstance(value,dict) and value.get('ok') is False and isinstance(error,dict)
+                    and error.get('code') in ('origin_http_failure','origin_transport_failure') and error.get('upstream_status')==response['status'],
+                    'missing native browser event lacks an explicit failed upstream response')
             if response['status']==200:
                 value=response['json'];require(value['ok'] is True,'successful API lacks application result')
                 if response['path']=='/api/task':reference.verify_query(value);require(value['snapshot']==event['snapshot'],'API/native snapshot differs')
@@ -149,6 +155,13 @@ def verify_browser(report,config,task,reference,events,allowed,writes,acknowledg
             qualified=actual-offset<=config['max_dispatch_lag_s'] and done<=end
         else:
             require(row['checks_passed'] is False and row.get('error_type'),'failed probe lacks retained failure')
+            if row['error_type']=='BrowserTaskApplicationFailure':
+                state=row.get('failure_state',{});kind=state.get('action_error');failed_path='/api/task' if kind=='Task refresh failed' else '/api/task/mutate'
+                require(kind in ('Action failed','Task refresh failed') and state.get('action_status')=='Unable to complete action. Please try again.'
+                    and any(r['path']==failed_path and 400<=r['status']<=599 and r.get('json',{}).get('ok') is False for r in row['responses']),
+                    'task failure lacks visible and HTTP failure evidence')
+                if kind=='Task refresh failed':require(state.get('app_outcome')=='failed' and state.get('error_text')=='Unable to load. Please try again.'
+                    and state.get('primary_disabled') is True and state.get('secondary_disabled') is True,'failed refresh left active controls or incorrect visible state')
             if row['outcome']=='dispatch_lag_drop':require(actual-offset>config['max_dispatch_lag_s'] and not row['requests'],'false browser drop')
         scored.append({'id':index,'outcome':row['outcome'],'qualified':qualified,'critical_content_paint_ms':row.get('critical_content_paint_ms')})
     return {'probes':scored,'eligible':all(r['qualified'] for r in scored)}

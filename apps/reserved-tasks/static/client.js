@@ -57,7 +57,7 @@ async function action(second){
     main.dataset.lastAction=JSON.stringify({request:payload,result});document.querySelector('#action-status').textContent=result.outcome;
     if(result.changed){last=second?null:result;await refresh();}
   }catch(error){document.querySelector('#action-status').textContent='Unable to complete action. Please try again.';main.dataset.actionError=error.message;}
-  finally{busy=false;primary.disabled=task==='inventory'&&!data?.items?.length;secondary.disabled=last===null;}
+  finally{busy=false;const failed=main.dataset.qrlOutcome==='failed';primary.disabled=failed||(task==='inventory'&&!data?.items?.length);secondary.disabled=failed||last===null;}
 }
 primary.addEventListener('click',()=>action(false));secondary.addEventListener('click',()=>action(true));
 if(main.dataset.strategy==='csr')refresh().catch(()=>{});else if(data?.ok===true){main.dataset.ready='true';primary.disabled=task==='inventory'&&!data.items.length;}else fail(data);

@@ -1,8 +1,8 @@
 {
   "version": "public-benchmark-package-candidate-v1",
-  "source_private_checkpoint": "d3bcf9408e3d9a55b4dacf51996ede6c964ae96c",
+  "source_private_checkpoint": "f609fa5c3a6801d070cc7d4572e59f22d2a1c118",
   "working_tree_changes_present": false,
-  "frozen_measurement_release": true,
+  "frozen_measurement_release": false,
   "private_git_history_copied": false,
   "manuscript_copied": false,
   "credentials_detected": false,
@@ -33,8 +33,8 @@
     },
     {
       "path": ".github/workflows/public-preflight.yml",
-      "bytes": 4480,
-      "sha256": "3f0303242d9d3392927b55001deb9cc5bda8d3e77dfe3ed91471d0be54fc605c",
+      "bytes": 4703,
+      "sha256": "f8cbfb502f9af6a07918d36d6dee38d225f5f792b61a9da31942826c45e0e758",
       "source_path": "infra/public_execution/workflows/public-preflight.yml"
     },
     {
@@ -69,8 +69,8 @@
     },
     {
       "path": "apps/reserved-tasks/static/client.js",
-      "bytes": 6547,
-      "sha256": "97c58c90464d2653fd5b5c0834f75f8e2e11f6054ad73d744f88b912ce9f2838",
+      "bytes": 6613,
+      "sha256": "31c42aff6e1b560490b73b0c4796b4b82074db0b5d46cdb1a81dfa13335c9e44",
       "source_path": "apps/reserved-tasks/static/client.js"
     },
     {
@@ -543,14 +543,14 @@
     },
     {
       "path": "experiments/heldout_tasks/performance_browser.cjs",
-      "bytes": 12175,
-      "sha256": "66fc66118755220293e79d576dc743f8e69ada759c89601190077d74c094a10a",
+      "bytes": 14133,
+      "sha256": "5c571c309938fdb439b7ef9f479e7da8242247bb974e959a25318607b83451f6",
       "source_path": "experiments/heldout_tasks/performance_browser.cjs"
     },
     {
       "path": "experiments/heldout_tasks/performance_evidence.py",
-      "bytes": 19510,
-      "sha256": "9ae44f076bda5928909680f5d5b497124f3c99edcb645914222ae88192ae23b1",
+      "bytes": 21041,
+      "sha256": "6d69e11135162819106c952c61f6f0d863d1bd23bf3cc265b198617c48698c3e",
       "source_path": "experiments/heldout_tasks/performance_evidence.py"
     },
     {
@@ -582,6 +582,12 @@
       "bytes": 1329,
       "sha256": "a07e5942367c2197af511a53be50463065aff30a81b53640ce1b93655b9a61b7",
       "source_path": "experiments/heldout_tasks/postgres.py"
+    },
+    {
+      "path": "experiments/heldout_tasks/refresh_failure_check.cjs",
+      "bytes": 3240,
+      "sha256": "e758adda777b3f52bdfa2ae92f90054a7dd087d204a1a1fc2319fbf5e91635fa",
+      "source_path": "experiments/heldout_tasks/refresh_failure_check.cjs"
     },
     {
       "path": "experiments/heldout_tasks/runtime.py",
@@ -1004,48 +1010,6 @@
       "source_path": "paper/followup/query-rendering-load/protocol/reserved_workload_trace_v1_1.json"
     },
     {
-      "path": "release/calendar_input.json",
-      "bytes": 668,
-      "sha256": "1d128a1e1009bc544d93835f0a475dc5cfbad98d5a5a2440a1415dd5f700bc34",
-      "source_path": "release/calendar_input.json",
-      "origin": "verified actual Linux compact preparation 42166524924"
-    },
-    {
-      "path": "release/decision_contract.json",
-      "bytes": 6833,
-      "sha256": "416bc35704bd768ee442043dacd07f2a41c9532a2e6178e479b18ab87ea2f3f7",
-      "source_path": "release/decision_contract.json",
-      "origin": "verified actual Linux compact preparation 42166524924"
-    },
-    {
-      "path": "release/main_contexts.json",
-      "bytes": 3972,
-      "sha256": "717086375bef27bf97b611a9d41818dfc96bd9ac7653dc0258c4dfa33e974463",
-      "source_path": "release/main_contexts.json",
-      "origin": "verified actual Linux compact preparation 42166524924"
-    },
-    {
-      "path": "release/profile_protocol.json",
-      "bytes": 2160,
-      "sha256": "a067f2ccf17e953caaf99d9124b8ae0aaf7e72b408fd28fab187fa9f6e49b244",
-      "source_path": "release/profile_protocol.json",
-      "origin": "verified actual Linux compact preparation 42166524924"
-    },
-    {
-      "path": "release/release.json",
-      "bytes": 18739,
-      "sha256": "ebe26c7b74e24e898e1f0484e4ce4db35f9dc490e03f5f74ff1cae2fb858fbd0",
-      "source_path": "release/release.json",
-      "origin": "verified actual Linux compact preparation 42166524924"
-    },
-    {
-      "path": "release/sample_plan.json",
-      "bytes": 3519,
-      "sha256": "aea8e00999d248d80b0f1649c299069fe1d64cfc17b3051d498eaeeca6f4777b",
-      "source_path": "release/sample_plan.json",
-      "origin": "verified actual Linux compact preparation 42166524924"
-    },
-    {
       "path": "scripts/audit_endtoend_distribution.py",
       "bytes": 28247,
       "sha256": "f3f6f3e0267ffb088f9f730a9861fd302936e5f780eae1b0fa7e56fa7c7dd329",
@@ -1110,6 +1074,12 @@
       "bytes": 950,
       "sha256": "7f31a220622e4a2e201e670c3d4da80d741b4ea8b873bd1ee7a32ee25423dfb1",
       "source_path": "scripts/check_reserved_performance_permission.py"
+    },
+    {
+      "path": "scripts/check_reserved_refresh_failure.py",
+      "bytes": 3419,
+      "sha256": "da560a07f010f346cf56093cdaa0ab4004165842c4c08c30227e8b325055958a",
+      "source_path": "scripts/check_reserved_refresh_failure.py"
     },
     {
       "path": "scripts/check_reserved_scale.py",
@@ -1251,8 +1221,8 @@
     },
     {
       "path": "tests/test_main_evidence.py",
-      "bytes": 8084,
-      "sha256": "36dc3f563ad9c6267d17fbc417fd4e2c4e16f96c016ec706b72f9286d1f93d03",
+      "bytes": 10935,
+      "sha256": "90d33251684a82e04c803bf799747333b972bc56fc25b9cf923c81688c08ecc9",
       "source_path": "tests/test_main_evidence.py"
     },
     {
@@ -1333,12 +1303,5 @@
       "sha256": "1c57ae777bcd5b7dfcf11a34336c52b593f2825d1cbc90de0698dc60951c8d01",
       "source_path": "tests/test_study_design.py"
     }
-  ],
-  "measurement_release": {
-    "release_sha256": "ebe26c7b74e24e898e1f0484e4ce4db35f9dc490e03f5f74ff1cae2fb858fbd0",
-    "model_source_commit": "d623b0e6f97b68b79f4fbf9de2b31ec096c561c0",
-    "preparation_run_id": "42166524924",
-    "browser_runtime_run_id": "42166517957",
-    "additional_spending_limit": 0
-  }
+  ]
 }

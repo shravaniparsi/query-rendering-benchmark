@@ -84,5 +84,32 @@ class MainEvidenceContracts(unittest.TestCase):
         report['probes'][0]['integrity_error']=True
         with self.assertRaises(ValueError):verify_browser(report,config,'inventory',None,{},set(),{},{})
 
+    def test_unexecuted_failed_browser_api_and_visible_refresh_failure_remain_misses(self):
+        config={'duration_s':20,'strategy':'csr','prefix':'case','offsets_s':[3,9,15],'max_dispatch_lag_s':.1};start=100_000_000_000
+        probes=[{'id':i,'operation_id':f'case-loaded-{i}','intended_offset_s':offset,'strategy':'csr','cold_context':True,
+            'dispatch_monotonic_ns':str(start+int(offset*1e9)),'finished_monotonic_ns':str(start+int((offset+.1)*1e9)),
+            'actual_offset_s':offset,'outcome':'failed','checks_passed':False,'error_type':'TimeoutError','integrity_error':False,
+            'requests':[],'responses':[],'evidence':[],'actions':[]} for i,offset in enumerate(config['offsets_s'])]
+        identity='case-loaded-0-refresh-0';probes[0].update(error_type='BrowserTaskApplicationFailure',
+            requests=[{'path':'/api/task','operation_id':identity}],responses=[{'path':'/api/task','operation_id':identity,'status':503,
+                'json':{'ok':False,'error':{'code':'origin_http_failure','upstream_status':503}}}],
+            failure_state={'action_error':'Task refresh failed','action_status':'Unable to complete action. Please try again.',
+                'app_outcome':'failed','error_text':'Unable to load. Please try again.','primary_disabled':True,'secondary_disabled':True})
+        report={'status':'completed','task':'inventory','strategy':'csr','probes':probes,
+            'start_signal':{'measurement_start_monotonic_ns':str(start),'duration_s':20},'probes_finished_monotonic_ns':str(start+19_000_000_000),
+            'release_monotonic_ns':str(start+20_000_000_000)}
+        def check(value,events=None):return verify_browser(value,config,'inventory',None,events or {},set(),{}, {})
+        actual=check(report);self.assertEqual(len(actual['probes']),3);self.assertFalse(actual['eligible']);self.assertFalse(any(row['qualified'] for row in actual['probes']))
+        for mutation in ('successful_without_native','unrecognized_error','wrong_http_status','active_control','unoffered_response','missing_failed_http'):
+            bad=deepcopy(report);row=bad['probes'][0]
+            if mutation=='successful_without_native':row['responses'][0].update(status=200,json={'ok':True})
+            if mutation=='unrecognized_error':row['responses'][0]['json']['error']['code']='unknown'
+            if mutation=='wrong_http_status':row['responses'][0]['json']['error']['upstream_status']=500
+            if mutation=='active_control':row['failure_state']['primary_disabled']=False
+            if mutation=='unoffered_response':row['requests']=[]
+            if mutation=='missing_failed_http':row['responses']=[]
+            with self.assertRaises(ValueError,msg=mutation):check(bad)
+        with self.assertRaises(ValueError):check(report,{identity:{'status':200,'path':'/query','snapshot':'1:2:'}})
+
 
 if __name__=='__main__':unittest.main()

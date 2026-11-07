@@ -4,6 +4,27 @@ const assert=require('node:assert/strict'),{execFileSync}=require('node:child_pr
 const {capture}=require('./dom.cjs');
 const now=()=>process.hrtime.bigint(),sleep=ms=>new Promise(resolve=>setTimeout(resolve,Math.max(0,ms)));
 
+async function settleAction(page,task,second){
+  await page.waitForFunction(({task,second})=>{
+    const main=document.querySelector('main'),value=JSON.parse(main.dataset.lastAction||'null');
+    return Boolean(main.dataset.actionError)||(second?value?.request.kind===({inventory:'cancel',analytics:'refund'}[task])&&!document.querySelector('#primary-action').disabled:!document.querySelector('#secondary-action').disabled);
+  },{task,second});
+  const state=await page.evaluate(()=>({app_outcome:document.querySelector('main').dataset.qrlOutcome,
+    action_error:document.querySelector('main').dataset.actionError||null,error_text:document.querySelector('#error').textContent,
+    action_status:document.querySelector('#action-status').textContent,primary_disabled:document.querySelector('#primary-action').disabled,
+    secondary_disabled:document.querySelector('#secondary-action').disabled}));
+  if(state.action_error){
+    assert(['Action failed','Task refresh failed'].includes(state.action_error),'Unexpected action failure state');
+    assert.equal(state.action_status,'Unable to complete action. Please try again.');
+    if(state.action_error==='Task refresh failed'){
+      assert.equal(state.app_outcome,'failed');assert.equal(state.error_text,'Unable to load. Please try again.');
+      assert.equal(state.primary_disabled,true);assert.equal(state.secondary_disabled,true);
+    }
+    const error=new Error('browser_task_application_failure');error.name='BrowserTaskApplicationFailure';error.failure_state=state;throw error;
+  }
+  assert.equal(state.app_outcome,'completed');
+}
+
 async function main(){
   const configPath=process.argv[2],config=JSON.parse(fs.readFileSync(configPath,'utf8')),endpoint=new URL(config.app_url),root=path.resolve(__dirname,'../..');
   assert.equal(endpoint.protocol,'http:');assert.equal(endpoint.port,'8765');assert(/^100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\./.test(endpoint.hostname));
@@ -68,9 +89,9 @@ async function main(){
           row.paint_entries=await page.evaluate(()=>window.taskProbe.paints);
           const entries=Object.entries(expected).map(([identifier,text])=>row.paint_entries.find(e=>e.identifier===identifier&&e.text===text&&e.renderTime>0&&e.rect.width>0&&e.rect.height>0));
           row.critical_content_paint_ms=Math.max(...entries.map(e=>e.renderTime));save();
-          await page.locator('main[data-ready="true"]').waitFor();await page.locator('#primary-action').click();await page.waitForFunction(()=>!document.querySelector('#secondary-action').disabled);
+          await page.locator('main[data-ready="true"]').waitFor();await page.locator('#primary-action').click();await settleAction(page,config.case.task,false);
           row.actions.push(JSON.parse(await page.locator('main').getAttribute('data-last-action')));assert.equal(row.actions[0].result.changed,true);row.evidence.push(await capture(page,config.case.task));save();
-          await page.locator('#secondary-action').click();await page.waitForFunction(()=>{const main=document.querySelector('main'),value=JSON.parse(main.dataset.lastAction||'null');return value?.request.kind===({inventory:'cancel',analytics:'refund'}[main.dataset.task])&&!document.querySelector('#primary-action').disabled;});
+          await page.locator('#secondary-action').click();await settleAction(page,config.case.task,true);
           row.actions.push(JSON.parse(await page.locator('main').getAttribute('data-last-action')));assert.equal(row.actions[1].result.changed,true);row.evidence.push(await capture(page,config.case.task));
           assert.equal(await page.locator('#secondary-action').isDisabled(),true);assert.equal(await page.locator('main').getAttribute('data-action-error'),null);
           row.trusted_clicks=await page.evaluate(()=>window.taskProbe.trusted_clicks);assert.deepEqual(row.trusted_clicks,[{id:'primary-action',trusted:true},{id:'secondary-action',trusted:true}]);
@@ -81,10 +102,17 @@ async function main(){
         await Promise.race([work,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('probe_deadline')),config.deadline_ms);})]);
       }catch(error){
         row.outcome='failed';row.checks_passed=false;row.error_type=error.name;row.error=error.message.slice(0,500);
+        if(error.failure_state)row.failure_state=error.failure_state;
         if(/Actual visible|Visible analytics count|Unexpected task|Unsafe integer|AssertionError/.test(error.message)||error.name==='AssertionError')row.integrity_error=true;
         if(error.message==='probe_deadline')await context.close();if(work)await work.catch(()=>{});row.outcome='failed';row.checks_passed=false;
       }finally{
         clearTimeout(timer);await Promise.all(pending);
+        if(row.error_type==='BrowserTaskApplicationFailure'){
+          try{
+            const failedPath=row.failure_state.action_error==='Task refresh failed'?'/api/task':'/api/task/mutate';
+            assert(row.responses.some(value=>value.path===failedPath&&value.status>=400&&value.status<=599&&value.json?.ok===false),'Application failure lacks a failed HTTP response');
+          }catch(error){row.integrity_error=true;row.error_type=error.name;row.error=error.message.slice(0,500);}
+        }
         if(row.outcome==='completed'){
           try{assert.deepEqual(row.response_errors,[]);row.protocols=await page.evaluate(()=>[...performance.getEntriesByType('navigation'),...performance.getEntriesByType('resource')].map(e=>e.nextHopProtocol).filter(Boolean));assert(row.protocols.length>0&&row.protocols.every(v=>v==='http/1.1'));}
           catch(error){row.outcome='failed';row.checks_passed=false;row.error_type=error.name;row.error=error.message.slice(0,500);row.integrity_error=true;}
@@ -97,4 +125,5 @@ async function main(){
     if(first){await first.page.screenshot({path:config.screenshot_path});report.screenshot_probe_id=first.row.id;}report.status='completed';
   }finally{input.close();await browser.close();save();}
 }
-main().catch(error=>{console.error(error);process.exitCode=1;});
+module.exports={settleAction};
+if(require.main===module)main().catch(error=>{console.error(error);process.exitCode=1;});
