@@ -2,7 +2,7 @@
   "version": "public-benchmark-package-candidate-v1",
   "source_private_checkpoint": "f609fa5c3a6801d070cc7d4572e59f22d2a1c118",
   "working_tree_changes_present": false,
-  "frozen_measurement_release": false,
+  "frozen_measurement_release": true,
   "private_git_history_copied": false,
   "manuscript_copied": false,
   "credentials_detected": false,
@@ -1010,6 +1010,42 @@
       "source_path": "paper/followup/query-rendering-load/protocol/reserved_workload_trace_v1_1.json"
     },
     {
+      "path": "release/calendar_input.json",
+      "bytes": 668,
+      "sha256": "1d128a1e1009bc544d93835f0a475dc5cfbad98d5a5a2440a1415dd5f700bc34",
+      "source_path": "actual-release-preparation-42396386962/release/calendar_input.json"
+    },
+    {
+      "path": "release/decision_contract.json",
+      "bytes": 6833,
+      "sha256": "416bc35704bd768ee442043dacd07f2a41c9532a2e6178e479b18ab87ea2f3f7",
+      "source_path": "actual-release-preparation-42396386962/release/decision_contract.json"
+    },
+    {
+      "path": "release/main_contexts.json",
+      "bytes": 3972,
+      "sha256": "717086375bef27bf97b611a9d41818dfc96bd9ac7653dc0258c4dfa33e974463",
+      "source_path": "actual-release-preparation-42396386962/release/main_contexts.json"
+    },
+    {
+      "path": "release/profile_protocol.json",
+      "bytes": 2160,
+      "sha256": "a067f2ccf17e953caaf99d9124b8ae0aaf7e72b408fd28fab187fa9f6e49b244",
+      "source_path": "actual-release-preparation-42396386962/release/profile_protocol.json"
+    },
+    {
+      "path": "release/release.json",
+      "bytes": 18983,
+      "sha256": "33f3db86ce92d432de6299fbec1ab7d2f10df91b97fcf9008422c4c7d1597ca5",
+      "source_path": "actual-release-preparation-42396386962/release/release.json"
+    },
+    {
+      "path": "release/sample_plan.json",
+      "bytes": 3519,
+      "sha256": "aea8e00999d248d80b0f1649c299069fe1d64cfc17b3051d498eaeeca6f4777b",
+      "source_path": "actual-release-preparation-42396386962/release/sample_plan.json"
+    },
+    {
       "path": "scripts/audit_endtoend_distribution.py",
       "bytes": 28247,
       "sha256": "f3f6f3e0267ffb088f9f730a9861fd302936e5f780eae1b0fa7e56fa7c7dd329",
@@ -1303,5 +1339,13 @@
       "sha256": "1c57ae777bcd5b7dfcf11a34336c52b593f2825d1cbc90de0698dc60951c8d01",
       "source_path": "tests/test_study_design.py"
     }
-  ]
+  ],
+  "measurement_release": {
+    "release_sha256": "33f3db86ce92d432de6299fbec1ab7d2f10df91b97fcf9008422c4c7d1597ca5",
+    "model_source_commit": "aa52178f7067639055ba66761d184a97fe668593",
+    "preparation_run_id": "42396386962",
+    "correctness_run_id": "42395716367",
+    "unchanged_browser_runtime_evidence_run_id": "42166517957",
+    "additional_spending_limit": 0
+  }
 }

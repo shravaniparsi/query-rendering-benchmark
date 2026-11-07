@@ -1,0 +1,63 @@
+{
+  "fallback_scope": "Any valid performance-unusable serial profile invokes the same fallback for every policy and all eight application/date contexts; integrity failures stop scoring",
+  "feature_allowlist": [
+    "csr_request_count",
+    "csr_serial_paint_median_ms",
+    "db_logical_cpus",
+    "fixture_rows",
+    "offered_rate",
+    "pool_size",
+    "read_fraction",
+    "read_payload_bytes",
+    "read_service_cv",
+    "read_service_median_ms",
+    "result_rows",
+    "ssr_request_count",
+    "ssr_serial_paint_median_ms",
+    "target_logical_cpus",
+    "write_a_fraction",
+    "write_a_service_median_ms",
+    "write_b_fraction",
+    "write_b_service_median_ms"
+  ],
+  "hardware": {
+    "observer_browser_cpus": 1,
+    "observer_generator_sampler_overlay_cpus": 1,
+    "pool_size": 4,
+    "target_application_gateway_overlay_cpus": 1,
+    "target_postgres_cpus": 1
+  },
+  "loaded_outcomes_as_features": false,
+  "overhead": {
+    "max_operations_per_window": 50000,
+    "minimum_context_median_ratio": 0.9,
+    "pairs": 3,
+    "rows": 1000,
+    "scope": "Marginal CPU sampling cost; shared receipt/hash/semantic costs remain in both modes",
+    "window_s": 5,
+    "workers": 4
+  },
+  "performance_profile_fallbacks": {
+    "inventory-reservation": "maintained/ssr",
+    "time-window-analytics": "maintained/ssr"
+  },
+  "phase": "permitted_serial_profile",
+  "profile_cost": "Retain profiling wall time, native transaction service, pool wait and setup/build/storage costs separately",
+  "selection_commitment": "Complete all twelve serial cells and commit profile/choice hashes on both hosts before the first loaded cell",
+  "serial": {
+    "logical_pacing": "serial completion-driven; intended, dispatch, body-receipt and validation clocks retained",
+    "operations_per_renderer": 60,
+    "quiet_probe_offsets_s": [
+      0.5,
+      3.5,
+      6.5
+    ],
+    "quiet_probes_per_renderer": 3,
+    "quiet_window_s": 10,
+    "read_operations_per_renderer": 36,
+    "write_a_operations_per_renderer": 12,
+    "write_b_operations_per_renderer": 12
+  },
+  "version": "permitted-serial-profile-v2",
+  "workload_trace_version": "reserved-workload-trace-v1.1"
+}
