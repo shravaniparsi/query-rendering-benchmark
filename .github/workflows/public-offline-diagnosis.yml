@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
-      contents: write
+      contents: read
     env:
       PYTHONUNBUFFERED: '1'
       PYTHONDONTWRITEBYTECODE: '1'
@@ -39,26 +39,3 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python scripts/replay_final_qualification_linux.py --output ci-artifacts/offline-replay
-      - name: Retain complete or partial offline evidence
-        if: always()
-        env:
-          GH_TOKEN: ${{ github.token }}
-          QRL_REPO: ${{ github.repository }}
-          QRL_RUN_ID: ${{ github.run_id }}
-          QRL_SOURCE: ${{ github.sha }}
-          QRL_REPLAY_OUTCOME: ${{ steps.replay.outcome }}
-        run: |
-          mkdir -p ci-artifacts
-          python - <<'PY'
-          import json, os
-          from pathlib import Path
-          Path('ci-artifacts/run-identity.json').write_text(json.dumps({'run_id':os.environ['QRL_RUN_ID'],'source_commit':os.environ['QRL_SOURCE'],'role':'existing evidence replay only','replay_step_outcome':os.environ['QRL_REPLAY_OUTCOME'],'acquisition_started':False,'refit_performed':False,'qualification_passed':False,'main_component_produced':False},indent=2)+'\n')
-          PY
-          QRL_STEM="public-offline-diagnosis-${QRL_RUN_ID}-1"
-          python scripts/bundle_public_output.py --source ci-artifacts --bundle "/tmp/${QRL_STEM}.tar.gz" --manifest "/tmp/${QRL_STEM}.json"
-          QRL_TAG="offline-diagnosis-${QRL_RUN_ID}"
-          printf '%s\n' 'Offline replay of already retained synthetic qualification evidence. Explicit diagnostic fixes only; original failed attempts remain unchanged. No new acquisition, refitting, qualification or main score.' > /tmp/qrl-offline-diagnosis-notes.txt
-          if ! gh release view "$QRL_TAG" --repo "$QRL_REPO" >/dev/null 2>&1; then
-            gh release create "$QRL_TAG" --repo "$QRL_REPO" --target "$QRL_SOURCE" --title "Offline qualification diagnosis ${QRL_RUN_ID}" --notes-file /tmp/qrl-offline-diagnosis-notes.txt
-          fi
-          gh release upload "$QRL_TAG" --repo "$QRL_REPO" "/tmp/${QRL_STEM}.tar.gz" "/tmp/${QRL_STEM}.json"

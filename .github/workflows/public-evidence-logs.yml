@@ -2,7 +2,7 @@ name: Preserve Public Execution Logs
 
 on:
   workflow_run:
-    workflows: ['Public Benchmark Preflight', 'Reserved Main Evaluation', 'Public Release Preparation', 'Public Application Replay', 'Public Browser Startup Check', 'Public Offline Qualification Diagnosis']
+    workflows: ['Public Benchmark Preflight', 'Reserved Main Evaluation', 'Public Release Preparation', 'Public Application Replay', 'Public Browser Startup Check']
     types: [completed]
 
 permissions:
@@ -44,9 +44,6 @@ jobs:
           elif [ "$QRL_WORKFLOW" = 'Public Browser Startup Check' ]; then
             QRL_STEM="public-browser-runtime-${QRL_RUN_ID}-${QRL_RUN_ATTEMPT}"
             QRL_TAG="browser-runtime-${QRL_RUN_ID}"
-          elif [ "$QRL_WORKFLOW" = 'Public Offline Qualification Diagnosis' ]; then
-            QRL_STEM="public-offline-diagnosis-${QRL_RUN_ID}-${QRL_RUN_ATTEMPT}"
-            QRL_TAG="offline-diagnosis-${QRL_RUN_ID}"
           else
             exit 1
           fi

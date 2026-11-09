@@ -1,6 +1,6 @@
 {
   "version": "public-benchmark-package-candidate-v1",
-  "source_private_checkpoint": "8e9bf09f4834f72358bd4635f91346d91ad58e42",
+  "source_private_checkpoint": "16fe15497fc092aee8b407506bcdabb1c6ffe43b",
   "working_tree_changes_present": false,
   "frozen_measurement_release": false,
   "private_git_history_copied": false,
@@ -21,8 +21,8 @@
     },
     {
       "path": ".github/workflows/public-evidence-logs.yml",
-      "bytes": 3294,
-      "sha256": "dffb512d54d6e65975fd33a27225221bbe23d795bb2b28462a1cff6a574658a6",
+      "bytes": 3033,
+      "sha256": "abdbcd587910e53b82cc08ee1afdeec11ebf75bd7d442b3d05ec75dd6e8c3e73",
       "source_path": "infra/public_execution/workflows/public-evidence-logs.yml"
     },
     {
@@ -33,8 +33,8 @@
     },
     {
       "path": ".github/workflows/public-offline-diagnosis.yml",
-      "bytes": 3277,
-      "sha256": "099695ffa5779fc6fc5b81160a209ccf16fef54afdb50511dfe515876a50e806",
+      "bytes": 1523,
+      "sha256": "11263f2083f59ff97bf5b106638ae7472bdb656559c2f6495aa777ca237f1fb3",
       "source_path": "infra/public_execution/workflows/public-offline-diagnosis.yml"
     },
     {
@@ -1380,5 +1380,5 @@
   },
   "retained_frozen_execution_commit": "f9d4f32f02115f18c14652eba447f28fa2a7fbdb",
   "current_tip_is_qualified_execution": false,
-  "diagnostic_only_change": "Manual Linux replay of already retained failed qualification evidence; acquisition flags remain off and attempt budget remains exhausted."
+  "diagnostic_only_change": "Read-only manual Linux replay of already-public qualification evidence. No derived artifact uploads; acquisition flags remain off and attempt budget remains exhausted."
 }
