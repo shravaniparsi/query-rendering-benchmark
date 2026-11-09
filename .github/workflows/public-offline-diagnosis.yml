@@ -1,0 +1,64 @@
+name: Public Offline Qualification Diagnosis
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-offline-qualification-diagnosis
+  cancel-in-progress: false
+
+jobs:
+  replay:
+    if: github.event.repository.private == false && github.repository == 'shravaniparsi/query-rendering-benchmark'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    env:
+      PYTHONUNBUFFERED: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      QRL_MAIN_ENABLED: ${{ vars.QRL_MAIN_ENABLED }}
+      QRL_QUALIFICATION_ENABLED: ${{ vars.QRL_QUALIFICATION_ENABLED }}
+      QRL_FROZEN_EXECUTION_SHA: ${{ vars.QRL_FROZEN_EXECUTION_SHA }}
+      QRL_RELEASE_SHA256: ${{ vars.QRL_RELEASE_SHA256 }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12.15'
+      - name: Install pinned replay dependencies without caches
+        run: python -m pip install --no-cache-dir -r apps/issue-dashboard/requirements.txt psycopg==3.2.10 psycopg-binary==3.2.10 typing_extensions==4.16.0 psutil==7.2.2
+      - name: Replay the retained final qualification without starting applications or refitting
+        id: replay
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/replay_final_qualification_linux.py --output ci-artifacts/offline-replay
+      - name: Retain complete or partial offline evidence
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          QRL_REPO: ${{ github.repository }}
+          QRL_RUN_ID: ${{ github.run_id }}
+          QRL_SOURCE: ${{ github.sha }}
+          QRL_REPLAY_OUTCOME: ${{ steps.replay.outcome }}
+        run: |
+          mkdir -p ci-artifacts
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('ci-artifacts/run-identity.json').write_text(json.dumps({'run_id':os.environ['QRL_RUN_ID'],'source_commit':os.environ['QRL_SOURCE'],'role':'existing evidence replay only','replay_step_outcome':os.environ['QRL_REPLAY_OUTCOME'],'acquisition_started':False,'refit_performed':False,'qualification_passed':False,'main_component_produced':False},indent=2)+'\n')
+          PY
+          QRL_STEM="public-offline-diagnosis-${QRL_RUN_ID}-1"
+          python scripts/bundle_public_output.py --source ci-artifacts --bundle "/tmp/${QRL_STEM}.tar.gz" --manifest "/tmp/${QRL_STEM}.json"
+          QRL_TAG="offline-diagnosis-${QRL_RUN_ID}"
+          printf '%s\n' 'Offline replay of already retained synthetic qualification evidence. Explicit diagnostic fixes only; original failed attempts remain unchanged. No new acquisition, refitting, qualification or main score.' > /tmp/qrl-offline-diagnosis-notes.txt
+          if ! gh release view "$QRL_TAG" --repo "$QRL_REPO" >/dev/null 2>&1; then
+            gh release create "$QRL_TAG" --repo "$QRL_REPO" --target "$QRL_SOURCE" --title "Offline qualification diagnosis ${QRL_RUN_ID}" --notes-file /tmp/qrl-offline-diagnosis-notes.txt
+          fi
+          gh release upload "$QRL_TAG" --repo "$QRL_REPO" "/tmp/${QRL_STEM}.tar.gz" "/tmp/${QRL_STEM}.json"

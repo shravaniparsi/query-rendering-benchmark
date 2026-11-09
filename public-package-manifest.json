@@ -1,8 +1,8 @@
 {
   "version": "public-benchmark-package-candidate-v1",
-  "source_private_checkpoint": "f609fa5c3a6801d070cc7d4572e59f22d2a1c118",
+  "source_private_checkpoint": "8e9bf09f4834f72358bd4635f91346d91ad58e42",
   "working_tree_changes_present": false,
-  "frozen_measurement_release": true,
+  "frozen_measurement_release": false,
   "private_git_history_copied": false,
   "manuscript_copied": false,
   "credentials_detected": false,
@@ -21,8 +21,8 @@
     },
     {
       "path": ".github/workflows/public-evidence-logs.yml",
-      "bytes": 3033,
-      "sha256": "abdbcd587910e53b82cc08ee1afdeec11ebf75bd7d442b3d05ec75dd6e8c3e73",
+      "bytes": 3294,
+      "sha256": "dffb512d54d6e65975fd33a27225221bbe23d795bb2b28462a1cff6a574658a6",
       "source_path": "infra/public_execution/workflows/public-evidence-logs.yml"
     },
     {
@@ -30,6 +30,12 @@
       "bytes": 13742,
       "sha256": "5824109004062be3b88004094762391c7165299025f74ed0a04783992442cce2",
       "source_path": "infra/public_execution/workflows/public-main-evaluation.yml"
+    },
+    {
+      "path": ".github/workflows/public-offline-diagnosis.yml",
+      "bytes": 3277,
+      "sha256": "099695ffa5779fc6fc5b81160a209ccf16fef54afdb50511dfe515876a50e806",
+      "source_path": "infra/public_execution/workflows/public-offline-diagnosis.yml"
     },
     {
       "path": ".github/workflows/public-preflight.yml",
@@ -1052,6 +1058,12 @@
       "source_path": "scripts/audit_endtoend_distribution.py"
     },
     {
+      "path": "scripts/audit_final_qualification_failure.py",
+      "bytes": 13783,
+      "sha256": "22b8308844135e8d1540cc172c598f7c9a283324282546c5a282e833720fdd5f",
+      "source_path": "scripts/audit_final_qualification_failure.py"
+    },
+    {
       "path": "scripts/audit_main_evaluation.py",
       "bytes": 17624,
       "sha256": "d824dd5c17717d8cfde86ae5ac6e9ae22bb6e59c50a185eab87271885b3270f5",
@@ -1136,6 +1148,12 @@
       "source_path": "scripts/claim_public_date.py"
     },
     {
+      "path": "scripts/diagnose_final_qualification.py",
+      "bytes": 10092,
+      "sha256": "4ef4a23028dac461331538b2df3fb5accec3420830cee6c9766b318537f50e93",
+      "source_path": "scripts/diagnose_final_qualification.py"
+    },
+    {
       "path": "scripts/fit_endtoend_development.py",
       "bytes": 7542,
       "sha256": "4b22fed44801368b3d497bcb9bf2028e5b7c8d0f7fd0d9eba6d8d0be0bf5a2af",
@@ -1190,6 +1208,12 @@
       "source_path": "scripts/recover_public_network.py"
     },
     {
+      "path": "scripts/replay_final_qualification_linux.py",
+      "bytes": 5821,
+      "sha256": "16a869cbd2c2db910721ac9c8363d90950328f0d1abf9eb8ef3ccfaee7417240",
+      "source_path": "scripts/replay_final_qualification_linux.py"
+    },
+    {
       "path": "scripts/replay_public_application.py",
       "bytes": 6327,
       "sha256": "492f7b0f9c57731f446674c780594c3aeb6a7306d6fe32299d874a3deea8477d",
@@ -1206,6 +1230,12 @@
       "bytes": 4171,
       "sha256": "8cd97eb13ec67677ccc43e9ccfbdce2a96b4d2d48e5aa67304869288344cee54",
       "source_path": "scripts/summarize_public_attempt.py"
+    },
+    {
+      "path": "scripts/verify_final_policy_commitments.py",
+      "bytes": 3318,
+      "sha256": "5992dbb41063e2a444c6030a0991158b7f177b9ceeb5374a81b16d891b122e6c",
+      "source_path": "scripts/verify_final_policy_commitments.py"
     },
     {
       "path": "scripts/verify_study_design_report.py",
@@ -1347,5 +1377,8 @@
     "correctness_run_id": "42395716367",
     "unchanged_browser_runtime_evidence_run_id": "42166517957",
     "additional_spending_limit": 0
-  }
+  },
+  "retained_frozen_execution_commit": "f9d4f32f02115f18c14652eba447f28fa2a7fbdb",
+  "current_tip_is_qualified_execution": false,
+  "diagnostic_only_change": "Manual Linux replay of already retained failed qualification evidence; acquisition flags remain off and attempt budget remains exhausted."
 }
