@@ -5,27 +5,34 @@ import itertools
 import re
 
 from .decision import PROFILE_FEATURES,require,scenarios,validate_threshold_family
+from .qualification_budget import amendment,PRIOR_CLAIMS
 from experiments.heldout_tasks.workload import APPLICATIONS,VERSION as TRACE_VERSION
 
 
 def calendar_plan(value,today):
-    require(set(value)=={'version','campaign_id','execution_repository','collection_dates_utc','qualification_dates_utc','stopping'},'complete explicit calendar input required')
-    require(value['version'] in ('reserved-calendar-plan-v1','reserved-calendar-plan-v2') and value['execution_repository']=='shravaniparsi/query-rendering-benchmark'
+    amended=value.get('version')=='reserved-calendar-plan-v3'
+    required={'version','campaign_id','execution_repository','collection_dates_utc','qualification_dates_utc','stopping'}
+    if amended:required.add('qualification_amendment')
+    require(set(value)==required,'complete explicit calendar input required')
+    require(value['version'] in ('reserved-calendar-plan-v1','reserved-calendar-plan-v2','reserved-calendar-plan-v3') and value['execution_repository']=='shravaniparsi/query-rendering-benchmark'
         and re.fullmatch('[a-z0-9-]{1,40}',value['campaign_id']) and value['stopping']=='fixed_days_no_effect_based_extension','calendar identity/stopping differs')
     main=value['collection_dates_utc'];qual=value['qualification_dates_utc']
-    compact=value['version']=='reserved-calendar-plan-v2';n=20 if compact else 60
-    require(isinstance(main,list) and len(main)==n and isinstance(qual,list) and 1<=len(qual)<=(2 if compact else 4),'fixed main-date count and bounded qualification attempts required')
+    compact=value['version'] in ('reserved-calendar-plan-v2','reserved-calendar-plan-v3');n=20 if compact else 60
+    require(isinstance(main,list) and len(main)==n and isinstance(qual,list) and 1<=len(qual)<=(1 if amended else (2 if compact else 4)),'fixed main-date count and bounded qualification attempts required')
     for days in (main,qual):
         require(all(isinstance(day,str) and date.fromisoformat(day).isoformat()==day for day in days) and days==sorted(set(days)),'ordered distinct real UTC dates required')
     require(min(qual)>=today.isoformat() and min(main)>max(qual),'qualification must be prospective and finish before the main calendar')
     if compact:
         first=date.fromisoformat(main[0]);require(main==[(first+timedelta(days=i)).isoformat() for i in range(20)],'compact main dates must be consecutive')
-        require(set(qual)<={(first-timedelta(days=i)).isoformat() for i in (1,2)},'compact qualification uses only the two pre-main dates')
+        if amended:
+            amendment(value['qualification_amendment'],value['campaign_id'])
+            require(date.fromisoformat(qual[0])<=first-timedelta(days=2) and qual[0]>PRIOR_CLAIMS[-1]['day'],'amended qualification needs one new date and at least two UTC days before main')
+        else:require(set(qual)<={(first-timedelta(days=i)).isoformat() for i in (1,2)},'compact qualification uses only the two pre-main dates')
     return deepcopy(value)
 
 
 def protocols(calendar,registry,contract,*,today):
-    plan=calendar_plan(calendar,today);compact=plan['version']=='reserved-calendar-plan-v2';n=20 if compact else 60
+    plan=calendar_plan(calendar,today);compact=plan['version'] in ('reserved-calendar-plan-v2','reserved-calendar-plan-v3');n=20 if compact else 60
     value=deepcopy(contract);validate_threshold_family(value['threshold_family'])
     roles={row['id']:row['role'] for row in registry['applications']}
     require(len(roles)==len(registry['applications']) and {a for a,r in roles.items() if r=='heldout'}==set(APPLICATIONS.values())
@@ -78,4 +85,7 @@ def protocols(calendar,registry,contract,*,today):
     if compact:
         first=date.fromisoformat(plan['collection_dates_utc'][0]);sample.update(qualification_attempt_limit=2,
             qualification_budget_dates_utc=sorted((first-timedelta(days=i)).isoformat() for i in (1,2)),full_qualification_cases_per_application=66)
+        if plan['version']=='reserved-calendar-plan-v3':
+            sample.update(qualification_attempt_limit=3,qualification_budget_dates_utc=[r['day'] for r in PRIOR_CLAIMS]+plan['qualification_dates_utc'],
+                qualification_amendment=amendment(plan['qualification_amendment'],plan['campaign_id']))
     return {'profile_protocol':profile,'main_contexts':main_contexts,'decision_contract':value,'sample_plan':sample}

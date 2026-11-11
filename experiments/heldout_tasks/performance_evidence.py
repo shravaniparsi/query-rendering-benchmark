@@ -148,7 +148,7 @@ def verify_browser(report,config,task,reference,events,allowed,writes,acknowledg
             verify_document(task,config['strategy'],row['document_html'],row['evidence'][0])
             text=row['evidence'][0]['visible_text'];expected={'task-count':text['count'],'task-first-title':text['titles'][0],'task-first-value':text['values'][0]};paints=[]
             for identity,label in expected.items():
-                matches=[v for v in row['paint_entries'] if v['identifier']==identity and v['text']==label and finite(v['renderTime']) and v['renderTime']>0 and v['rect']['width']>0 and v['rect']['height']>0]
+                matches=[v for v in row['paint_entries'] if v['identifier']==identity and v.get('text')==label and finite(v['renderTime']) and v['renderTime']>0 and v['rect']['width']>0 and v['rect']['height']>0]
                 require(matches,'content-matched visible paint missing');paints.append(matches[0]['renderTime'])
             require(row['critical_content_paint_ms']==max(paints) and max(paints)<=(done-dispatch)/1e6,'browser paint clock exceeds probe')
             require(len(row['navigation'])==1 and all(finite(v) and v>=0 for v in row['navigation'][0].values()),'native navigation evidence differs')

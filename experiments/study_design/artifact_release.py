@@ -7,11 +7,12 @@ import subprocess
 from datetime import date
 
 from .decision import PROFILE_FEATURES, require, scenarios, validate_threshold_family, validate_training_apps
+from .qualification_budget import validate_budget
 
 VERSION = 'reserved-performance-release-v2'
 ARTIFACTS = {'model', 'training_inputs', 'profile_protocol', 'sample_plan', 'main_contexts', 'registry', 'decision_contract'}
 REQUIRED_SOURCES = {'experiments/study_design/decision.py', 'experiments/study_design/learner.py',
-    'experiments/study_design/artifact_release.py', 'experiments/study_design/selection.py'}
+    'experiments/study_design/artifact_release.py', 'experiments/study_design/selection.py','experiments/study_design/qualification_budget.py'}
 
 
 def sha256(raw): return hashlib.sha256(raw).hexdigest()
@@ -103,6 +104,7 @@ def verify_release(root, release_path, *, expected_release_sha256):
         require(len(queries) >= 2 and len(catalog) == len(set(catalog)) and set(catalog) == {q + '/' + r for q in queries for r in ('ssr', 'csr')}, 'main catalogs need both renderers for every query')
     sample = artifacts['sample_plan']; require(sample['version'] == 'main-sample-plan-v1' and sample['performance_phase'] == 'heldout' and
         sample['independent_unit'] == 'UTC collection-day aggregate' and sample['stopping'] == 'fixed_days_no_effect_based_extension', 'main sampling/stopping contract differs')
+    validate_budget(sample)
     days = sample['collection_dates_utc']; require(isinstance(days, list) and 2 <= len(days) <= 60 and days == sorted(set(days)), 'bounded distinct ordered real UTC dates required')
     require(all(isinstance(day, str) and date.fromisoformat(day).isoformat() == day for day in days), 'invalid UTC collection date')
     require(type(sample['day_count']) is int and sample['day_count'] == len(days), 'fixed day count differs')

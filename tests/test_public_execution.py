@@ -14,9 +14,43 @@ from scripts.research_network import verify_own,verify_standard,verify_key_recei
 from scripts.public_network_check import context as network_context,REPOSITORY,WORKFLOW
 from scripts.recover_public_network import role_files,FAILED_RUN,FAILED_SOURCE
 from scripts.claim_public_date import qualification_block
+from experiments.study_design.qualification_budget import AMENDMENT,PRIOR_CLAIMS
 
 
 class PublicExecutionContracts(unittest.TestCase):
+    def amended_history(self,third=False,extra=False,missing=False):
+        sample={'qualification_attempt_limit':3,'qualification_budget_dates_utc':['2026-11-07','2026-11-08','2026-11-13'],
+            'qualification_dates_utc':['2026-11-13'],'qualification_amendment':deepcopy(AMENDMENT),'campaign_id':'reserved-main-v2',
+            'day_count':20,'qualification_date_mode':'complete_profile_and_loaded_full_panel'}
+        rows=deepcopy(PRIOR_CLAIMS)
+        if third:rows.append({'day':'2026-11-13','claim_sha':'3'*40,'run_id':'synthetic-third','source_commit':'4'*40,'release_sha256':'5'*64})
+        if extra:rows.append({'day':'2026-11-12','claim_sha':'6'*40,'run_id':'synthetic-hidden','source_commit':'7'*40,'release_sha256':'8'*64})
+        if missing:rows=rows[1:]
+        refs=[{'ref':'refs/tags/qualification-reserved-main-v2-'+r['day'],'object':{'type':'tag','sha':r['claim_sha']}} for r in rows]
+        def optional(path):return next((r for r in refs if path.endswith(r['ref'].removeprefix('refs/tags/'))),None)
+        def call(method,path,**kwargs):
+            self.assertEqual(method,'GET')
+            if path.startswith('/git/matching-refs/'):return refs
+            row=next(r for r in rows if path.endswith(r['claim_sha']))
+            return {'message':json.dumps({'collection_date_utc':row['day'],'mode':'qualification','run_attempt':'1',**{k:row[k] for k in ('run_id','source_commit','release_sha256')}})}
+        return sample,optional,call
+
+    def test_approved_third_attempt_counts_both_original_claims_and_stops_after_three(self):
+        api=GitHub('owner/repo','synthetic-token')
+        for third in (False,True):
+            sample,optional,call=self.amended_history(third=third)
+            with patch.object(api,'optional',side_effect=optional),patch.object(api,'call',side_effect=call),patch('scripts.claim_public_date.verify_claim'),patch('scripts.claim_public_date.source_correction_block',return_value=None):
+                result=qualification_block(api,sample,'2026-11-13','9'*40,{})
+                if third:self.assertIn('budget exhausted',result)
+                else:self.assertIsNone(result)
+
+    def test_amended_calendar_cannot_hide_a_consumed_date_or_drop_an_original_failure(self):
+        api=GitHub('owner/repo','synthetic-token')
+        for flags in ({'extra':True},{'missing':True}):
+            sample,optional,call=self.amended_history(**flags)
+            with patch.object(api,'optional',side_effect=optional),patch.object(api,'call',side_effect=call),patch('scripts.claim_public_date.verify_claim'):
+                with self.subTest(flags=flags),self.assertRaises(ValueError):qualification_block(api,sample,'2026-11-13','9'*40,{})
+
     def test_qualification_cannot_repeat_same_source_or_exceed_two_claims(self):
         sample={'qualification_attempt_limit':2,'qualification_budget_dates_utc':['2027-01-01','2027-01-02'],'campaign_id':'synthetic'}
         api=GitHub('owner/repo','synthetic-token');message={'run_id':'123','source_commit':'1'*40,'release_sha256':'2'*64}

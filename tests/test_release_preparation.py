@@ -5,6 +5,7 @@ import unittest
 from experiments.heldout_tasks.main_design import cells
 from experiments.study_design.decision import PROFILE_FEATURES,scenarios
 from experiments.study_design.release_preparation import protocols
+from experiments.study_design.qualification_budget import AMENDMENT,PRIOR_CLAIMS,validate_budget
 
 
 class ReleasePreparationContracts(unittest.TestCase):
@@ -57,6 +58,34 @@ class ReleasePreparationContracts(unittest.TestCase):
             {'collection_dates_utc':baseline['collection_dates_utc'][:-1]+['2027-01-22']}):
             self.calendar={**baseline,**change}
             with self.subTest(change=change),self.assertRaises(ValueError):self.build()
+
+    def test_approved_amendment_keeps_both_failures_and_all_scientific_protocols(self):
+        self.calendar.update(version='reserved-calendar-plan-v2',collection_dates_utc=self.calendar['collection_dates_utc'][:20],qualification_dates_utc=['2026-12-30'])
+        original=self.build()
+        self.calendar.update(version='reserved-calendar-plan-v3',campaign_id='reserved-main-v2',qualification_amendment=deepcopy(AMENDMENT))
+        amended=self.build();sample=amended['sample_plan']
+        self.assertEqual(validate_budget(sample),3);self.assertEqual(sample['qualification_budget_dates_utc'],['2026-11-07','2026-11-08','2026-12-30'])
+        self.assertEqual(sample['qualification_dates_utc'],['2026-12-30']);self.assertEqual(sample['qualification_amendment']['prior_claims'],PRIOR_CLAIMS)
+        for name in ('profile_protocol','main_contexts','decision_contract'):self.assertEqual(original[name],amended[name])
+        for task in ('inventory','analytics'):self.assertEqual(len(cells(amended,task,'2026-12-30',True)),66)
+
+    def test_amendment_rejects_renamed_campaign_dropped_history_extra_slots_and_short_buffer(self):
+        self.calendar.update(version='reserved-calendar-plan-v3',campaign_id='reserved-main-v2',collection_dates_utc=self.calendar['collection_dates_utc'][:20],
+            qualification_dates_utc=['2026-12-30'],qualification_amendment=deepcopy(AMENDMENT))
+        baseline=deepcopy(self.calendar)
+        for change in ({'campaign_id':'renamed'},{'qualification_dates_utc':['2026-12-30','2026-12-31']},
+            {'qualification_dates_utc':['2026-12-31']},{'qualification_amendment':{**deepcopy(AMENDMENT),'total_limit':4}},
+            {'qualification_amendment':{**deepcopy(AMENDMENT),'prior_claims':PRIOR_CLAIMS[1:]}}):
+            self.calendar={**deepcopy(baseline),**change}
+            with self.subTest(change=change),self.assertRaises(ValueError):self.build()
+
+    def test_full_qualification_budget_cannot_be_erased_or_expanded(self):
+        sample={'qualification_attempt_limit':3,'campaign_id':'reserved-main-v2','day_count':20,'qualification_date_mode':'complete_profile_and_loaded_full_panel',
+            'qualification_dates_utc':['2026-12-30'],'qualification_budget_dates_utc':['2026-11-07','2026-11-08','2026-12-30'],'qualification_amendment':deepcopy(AMENDMENT)}
+        self.assertEqual(validate_budget(sample),3)
+        for change in ({'qualification_attempt_limit':4},{'qualification_attempt_limit':None},{'qualification_budget_dates_utc':['2026-12-30']},
+            {'qualification_amendment':None},{'day_count':21}):
+            with self.subTest(change=change),self.assertRaises(ValueError):validate_budget({**sample,**change})
 
 
 if __name__=='__main__':unittest.main()

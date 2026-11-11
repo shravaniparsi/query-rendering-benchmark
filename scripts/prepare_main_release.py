@@ -16,6 +16,7 @@ from experiments.study_design.decision import require
 from experiments.study_design.performance_release import PerformancePermission
 from experiments.study_design.public_github import GitHub
 from experiments.study_design.release_preparation import protocols
+from scripts.claim_public_date import qualification_block
 
 REPO='shravaniparsi/query-rendering-benchmark'
 PROTOCOL='paper/followup/query-rendering-load/protocol/'
@@ -38,7 +39,7 @@ def main():
         and os.environ.get('RUNNER_OS')=='Linux' and os.environ.get('GITHUB_EVENT_NAME')=='workflow_dispatch','declared public Linux/Python preparation platform required')
     require(os.environ['GITHUB_REPOSITORY']==REPO and os.environ['GITHUB_REF']=='refs/heads/main'
         and os.environ['GITHUB_WORKFLOW_REF']==REPO+'/.github/workflows/public-release-prepare.yml@refs/heads/main','dedicated main-branch release preparation workflow required')
-    repository=GitHub(REPO,os.environ['GH_TOKEN']).require_public();require(repository['id']==1447601875,'unexpected public repository')
+    api=GitHub(REPO,os.environ['GH_TOKEN']);repository=api.require_public();require(repository['id']==1447601875,'unexpected public repository')
     source=git('rev-parse','HEAD').decode().strip();require(source==os.environ['GITHUB_SHA'] and re.fullmatch('[0-9a-f]{40}',source),'exact executing source commit required')
     require(not git('status','--porcelain','--untracked-files=no'),'tracked source changed before preparation')
     require(git('rev-list','--max-parents=0',source).decode().splitlines()==['b2c396b2b769b29308bc16b80cbc26de18b57d65'],'isolated public Git history required')
@@ -61,6 +62,13 @@ def main():
     model=json.loads((ROOT/MODEL).read_bytes());envelope={'version':VERSION,'model_source_commit':source,'artifacts':artifacts,'source_files':sources,
         'fit_applications':model['fit_applications'],'hyperparameters_frozen':True}
     released=write('release/release.json',envelope);permission=PerformancePermission(ROOT,released['path'],released['sha256'])
+    out=ROOT/'ci-artifacts';out.mkdir(exist_ok=True)
+    if calendar['version']=='reserved-calendar-plan-v3':
+        require(qualification_block(api,permission.artifacts['sample_plan'],calendar['qualification_dates_utc'][0],source,sources) is None,'amended qualification history is blocked')
+        history={'status':'passed','role':'actual prior-claim verification only; no date claimed','total_limit':3,'prior_claim_count':2,
+            'campaign_id':calendar['campaign_id'],'amendment':calendar['qualification_amendment'],
+            'actual_qualification_refs':api.call('GET','/git/matching-refs/tags/qualification-'+calendar['campaign_id']+'-')}
+        (out/'qualification-history-check.json').write_text(json.dumps(history,indent=2)+'\n')
     from experiments.heldout_tasks.main_design import cells
     counts={task:{'main_cases':len(cells(permission.artifacts,task,calendar['collection_dates_utc'][0])),
         'qualification_cases':len(cells(permission.artifacts,task,calendar['qualification_dates_utc'][0],True))} for task in ('inventory','analytics')}
@@ -68,7 +76,7 @@ def main():
     report.update(role='actual seven-artifact candidate verification and exact unchanged development-fit replay; no acquisition',run_id=os.environ['GITHUB_RUN_ID'],
         source_commit=source,python=sys.version,platform=platform.platform(),release_file=released,case_counts=counts,benchmark_measurements=False,
         main_enabled=False,qualification_enabled=False,calendar_input_sha256=sha(json.dumps(calendar,sort_keys=True,separators=(',',':')).encode()))
-    out=ROOT/'ci-artifacts';out.mkdir(exist_ok=True);(out/'release-validation.json').write_text(json.dumps(report,indent=2)+'\n')
+    (out/'release-validation.json').write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps({'status':'passed','actual_artifacts_checked':7,'release_sha256':released['sha256'],'main_acquisition_started':False}))
 
 

@@ -51,7 +51,7 @@ def audit(target,observer,permission):
     target_cpu,db_cpu=sorted(t['local']['allowed_cpus'])[:2];generator_cpu,browser_cpu=sorted(o['local']['allowed_cpus'])[:2]
     connections=load(target/'connection-observations.json');server=server_connections(connections,target_cpu);identities=load(target/'identity-observations.json')
     require(len(identities)==len(connections),'gateway request identity observations missing')
-    for event,identity in zip(connections,identities):require(all(event[k]==identity[k] for k in ('connection_id','response_index','path','operation_id')),'gateway promoted identity differs')
+    for event,gateway_identity in zip(connections,identities):require(all(event[k]==gateway_identity[k] for k in ('connection_id','response_index','path','operation_id')),'gateway promoted identity differs')
     summaries=[];serial=[];panels=defaultdict(dict);qualifications=[];first_loaded_target=None;first_loaded_observer=None
     for case in values:
         td,od=target/case['name'],observer/case['name'];packet=load(td/'profile-packet.json');require(packet==load(od/'profile-packet.json'),'native profile packet changed in transit')
