@@ -1,6 +1,6 @@
 {
   "version": "public-benchmark-package-candidate-v1",
-  "source_private_checkpoint": "762770977a613678d3aa8b3d81ac0cc115650cd4",
+  "source_private_checkpoint": "175232db25a042673affee7c82811ae9ef281655",
   "working_tree_changes_present": false,
   "frozen_measurement_release": false,
   "private_git_history_copied": false,
@@ -21,8 +21,8 @@
     },
     {
       "path": ".github/workflows/public-evidence-logs.yml",
-      "bytes": 3595,
-      "sha256": "dff839e0e6b894ba8f0c853cdb4a986d7e6714081ed6725aebcc5350f0606151",
+      "bytes": 4189,
+      "sha256": "b7d409ce03482e3310135c55b124c8ad55bfebf1a32c81938eb347adc2aa3333",
       "source_path": "infra/public_execution/workflows/public-evidence-logs.yml"
     },
     {

@@ -57,6 +57,14 @@ jobs:
               exit 1
             fi
           fi
+          if [ ! -s "/tmp/${QRL_STEM}-all-jobs.log" ]; then
+            if jq -e '.conclusion == "skipped" and all(.jobs[]; .conclusion == "skipped")' "/tmp/${QRL_STEM}-metadata.json" >/dev/null; then
+              printf '%s\n' 'Provider metadata reports an entirely skipped parent; the log endpoint returned zero bytes and no job logs were generated.' > "/tmp/${QRL_STEM}-all-jobs.log"
+            else
+              printf '%s\n' 'An executed parent returned an empty log; refusing to replace missing evidence with a skipped-run marker.' >&2
+              exit 1
+            fi
+          fi
           printf '%s\n' 'Retained run metadata and masked complete job logs, including failed attempts. Network checks, qualification and main evidence remain distinguished by the original run and role reports.' > /tmp/qrl-log-notes.txt
           if ! gh release view "$QRL_TAG" --repo "$QRL_REPO" >/dev/null 2>&1; then
             gh release create "$QRL_TAG" --repo "$QRL_REPO" --target "$QRL_SOURCE" --title "Benchmark execution ${QRL_RUN_ID}" --notes-file /tmp/qrl-log-notes.txt
