@@ -2,7 +2,7 @@
   "version": "public-benchmark-package-candidate-v1",
   "source_private_checkpoint": "175232db25a042673affee7c82811ae9ef281655",
   "working_tree_changes_present": false,
-  "frozen_measurement_release": false,
+  "frozen_measurement_release": true,
   "private_git_history_copied": false,
   "manuscript_copied": false,
   "credentials_detected": false,
@@ -1022,6 +1022,42 @@
       "source_path": "paper/followup/query-rendering-load/protocol/reserved_workload_trace_v1_1.json"
     },
     {
+      "path": "release/calendar_input.json",
+      "bytes": 1526,
+      "sha256": "8f3183e68378c2aacb572b6510e0f6130854d3dfa98db6e75b7a6de068d4dd4e",
+      "source_path": "actual-public-release-preparation-43077834053/release/calendar_input.json"
+    },
+    {
+      "path": "release/decision_contract.json",
+      "bytes": 6833,
+      "sha256": "416bc35704bd768ee442043dacd07f2a41c9532a2e6178e479b18ab87ea2f3f7",
+      "source_path": "actual-public-release-preparation-43077834053/release/decision_contract.json"
+    },
+    {
+      "path": "release/main_contexts.json",
+      "bytes": 3972,
+      "sha256": "717086375bef27bf97b611a9d41818dfc96bd9ac7653dc0258c4dfa33e974463",
+      "source_path": "actual-public-release-preparation-43077834053/release/main_contexts.json"
+    },
+    {
+      "path": "release/profile_protocol.json",
+      "bytes": 2160,
+      "sha256": "a067f2ccf17e953caaf99d9124b8ae0aaf7e72b408fd28fab187fa9f6e49b244",
+      "source_path": "actual-public-release-preparation-43077834053/release/profile_protocol.json"
+    },
+    {
+      "path": "release/release.json",
+      "bytes": 19701,
+      "sha256": "02e15de76ae6c4b62b10693d7e615a4d2b46fd80c7710671e346fe6dccb2666c",
+      "source_path": "actual-public-release-preparation-43077834053/release/release.json"
+    },
+    {
+      "path": "release/sample_plan.json",
+      "bytes": 4395,
+      "sha256": "b07a7b197990867140cd5b734382e5bde5eb53edf360cbba961ed84444aaa1da",
+      "source_path": "actual-public-release-preparation-43077834053/release/sample_plan.json"
+    },
+    {
       "path": "scripts/audit_endtoend_distribution.py",
       "bytes": 28247,
       "sha256": "f3f6f3e0267ffb088f9f730a9861fd302936e5f780eae1b0fa7e56fa7c7dd329",
@@ -1350,5 +1386,16 @@
     "execution_source_commit": "f9d4f32f02115f18c14652eba447f28fa2a7fbdb"
   },
   "current_tip_is_qualified_execution": false,
-  "approved_amendment_version": "one-extra-qualification-amendment-v1"
+  "approved_amendment_version": "one-extra-qualification-amendment-v1",
+  "measurement_release": {
+    "release_sha256": "02e15de76ae6c4b62b10693d7e615a4d2b46fd80c7710671e346fe6dccb2666c",
+    "model_source_commit": "a5970603b779f136b2037b9a4967325b02331607",
+    "preparation_run_id": "43077834053",
+    "correctness_run_id": "43077086947",
+    "unchanged_browser_runtime_evidence_run_id": "42166517957",
+    "additional_spending_limit": 0,
+    "qualification_status": "not_yet_qualified",
+    "campaign_id": "reserved-main-v2",
+    "qualification_attempt_limit": 3
+  }
 }
