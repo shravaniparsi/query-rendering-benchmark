@@ -38,4 +38,4 @@ jobs:
         id: replay
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python scripts/replay_final_qualification_linux.py --output ci-artifacts/offline-replay
+        run: python scripts/recheck_amended_qualification_linux.py --output ci-artifacts/amended-qualification-recheck
