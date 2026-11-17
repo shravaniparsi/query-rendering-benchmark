@@ -33,8 +33,8 @@
     },
     {
       "path": ".github/workflows/public-offline-diagnosis.yml",
-      "bytes": 1541,
-      "sha256": "67cc19ede24b2b9dbb436c8dc89ff7ac0398256745fb9322885af70562907da3",
+      "bytes": 1518,
+      "sha256": "1a211df3552f98b0f7b6b555a6f52c6bfd67e4a68301a9450d86b6d8f0628cd0",
       "source_path": "infra/public_execution/workflows/public-offline-diagnosis.yml"
     },
     {
@@ -1076,6 +1076,12 @@
       "source_path": "scripts/audit_final_qualification_failure.py"
     },
     {
+      "path": "scripts/audit_main_attempt_20261117.py",
+      "bytes": 19976,
+      "sha256": "065833fce09319bda3b75d14ba91bd69406155e51ea7cb6a3f9ac8aefb0db742",
+      "source_path": "scripts/audit_main_attempt_20261117.py"
+    },
+    {
       "path": "scripts/audit_main_evaluation.py",
       "bytes": 17640,
       "sha256": "7e0d9267ce444c2b541997deb3a02094c4158884e674ee414bd6adfbae784ed2",
@@ -1218,6 +1224,12 @@
       "bytes": 4717,
       "sha256": "cc23e78bc2d9beb5b5030961473f40b7458e9c469725e3a9a2dcc8b7724e2f67",
       "source_path": "scripts/recheck_amended_qualification_linux.py"
+    },
+    {
+      "path": "scripts/recheck_first_main_linux.py",
+      "bytes": 5808,
+      "sha256": "1a7cd325a8b3fef8cfcf6663426617240e688854bc936ce782adfd027d525aa2",
+      "source_path": "scripts/recheck_first_main_linux.py"
     },
     {
       "path": "scripts/recover_public_network.py",
@@ -1415,5 +1427,12 @@
     "frozen_execution_source": "bbb0dfdf1209eb77201c4823ec4edbce5240ecf4",
     "parent_qualification_run_id": "43473084067",
     "permissions": "contents:read"
+  },
+  "offline_main_recheck": {
+    "measurement_source_unchanged": true,
+    "contents_read_only": true,
+    "acquisition_started": false,
+    "refit_performed": false,
+    "derived_payload_uploaded": false
   }
 }
