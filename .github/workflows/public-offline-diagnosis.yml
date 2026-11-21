@@ -34,8 +34,8 @@ jobs:
           python-version: '3.12.15'
       - name: Install pinned replay dependencies without caches
         run: python -m pip install --no-cache-dir -r apps/issue-dashboard/requirements.txt psycopg==3.2.10 psycopg-binary==3.2.10 typing_extensions==4.16.0 psutil==7.2.2
-      - name: Replay the retained first main attempt without starting applications or refitting
+      - name: Replay the retained full main panels without starting applications or refitting
         id: replay
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python scripts/recheck_first_main_linux.py --output ci-artifacts/first-main-recheck
+        run: python scripts/recheck_full_main_20261121_linux.py --output ci-artifacts/full-main-recheck
